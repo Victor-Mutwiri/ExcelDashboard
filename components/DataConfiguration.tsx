@@ -53,6 +53,13 @@ const DraggableHeader: React.FC<{
   );
 };
 
+const formatDate = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const day = date.getDate().toString().padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const DataConfiguration: React.FC<DataConfigurationProps> = ({
   fileName,
   parsedFile,
@@ -123,7 +130,10 @@ const DataConfiguration: React.FC<DataConfigurationProps> = ({
       originalColumns.forEach(col => {
         const originalIndex = parseInt(col.id.split('_')[1]);
         let value = rawRow[originalIndex];
-        if (col.isNumeric) {
+
+        if (value instanceof Date) {
+            value = formatDate(value);
+        } else if (col.isNumeric) {
           value = value !== null ? parseFloat(value) : null;
           if (isNaN(value as number)) value = null;
         }

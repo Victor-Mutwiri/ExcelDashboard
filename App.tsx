@@ -47,7 +47,7 @@ export default function App() {
 
   const [savedDashboards, setSavedDashboards] = useState<SavedDashboard[]>([]);
   const [theme, setTheme] = useState<ThemeName>(() => {
-    return (localStorage.getItem('dashboard-theme') as ThemeName) || 'dark';
+    return (localStorage.getItem('dashboard-theme') as ThemeName) || 'light';
   });
 
   useEffect(() => {

@@ -3,6 +3,18 @@ import type { ColumnConfig, RowData, ParsedFile } from '../types';
 import { evaluateFormula } from './formulaEvaluator';
 import { parseNumericValue } from './dataCleaner';
 
+/**
+ * Formats a Date object into a 'YYYY-MM-DD' string.
+ * @param date The Date object to format.
+ * @returns A formatted date string.
+ */
+const formatDate = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const day = date.getDate().toString().padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export const parseFile = (file: File): Promise<ParsedFile> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -40,7 +52,10 @@ export const processData = (rawData: any[][], finalConfig: ColumnConfig[]): RowD
     originalColumns.forEach(config => {
       const originalColumnIndex = parseInt(config.id.split('_')[1]);
       let value = row[originalColumnIndex];
-      if (config.isNumeric) {
+      
+      if (value instanceof Date) {
+        value = formatDate(value);
+      } else if (config.isNumeric) {
         value = parseNumericValue(value);
       }
       rowData[config.label] = value;
