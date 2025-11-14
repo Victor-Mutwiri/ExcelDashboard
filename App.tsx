@@ -21,7 +21,7 @@ import ManageHiddenWidgetsModal from './components/ManageHiddenWidgetsModal';
 import TitleEditModal from './components/TitleEditModal';
 import { parseFile, processData } from './utils/fileParser';
 import { generateInsight } from './utils/ai';
-import { ChartIcon, PlusIcon, ResetIcon, SaveIcon, FolderOpenIcon, KpiIcon, TableIcon, ExportIcon, PaintBrushIcon, EyeIcon, CloseIcon, TitleIcon, BackIcon, CalculatorIcon, TextIcon, SparklesIcon, SettingsIcon } from './components/Icons';
+import { ChartIcon, PlusIcon, ResetIcon, SaveIcon, FolderOpenIcon, KpiIcon, TableIcon, ExportIcon, EyeIcon, CloseIcon, TitleIcon, BackIcon, CalculatorIcon, TextIcon, SparklesIcon, SettingsIcon } from './components/Icons';
 import { themes, ThemeName } from './themes';
 import { isPotentiallyNumeric } from './utils/dataCleaner';
 
@@ -52,7 +52,6 @@ export default function App() {
 
   const [isAddWidgetMenuOpen, setAddWidgetMenuOpen] = useState(false);
   const [isExportMenuOpen, setExportMenuOpen] = useState(false);
-  const [isThemeMenuOpen, setThemeMenuOpen] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
 
@@ -200,6 +199,8 @@ export default function App() {
     setData([]);
     setWidgets([]);
     setIsPreviewMode(false);
+    // When starting over from dashboard, go back to upload, not landing
+    setShowLandingPage(false); 
   };
 
   const handleSaveDashboard = (name: string) => {
@@ -446,6 +447,7 @@ export default function App() {
   };
 
   const handleGetStarted = () => {
+    // Reset state but keep on the upload page
     handleReset();
     setShowLandingPage(false);
   };
@@ -534,34 +536,6 @@ export default function App() {
                 <button data-tooltip="Save your current dashboard layout, widgets, and data." onClick={() => setIsSaveModalOpen(true)} className="px-4 py-2 text-sm font-semibold text-[var(--text-on-accent)] bg-[var(--bg-accent)] hover:bg-[var(--bg-accent-hover)] rounded-lg flex items-center gap-2">
                   <SaveIcon /> Save
                 </button>
-                <button data-tooltip="Configure dashboard settings, including AI providers." onClick={() => setIsSettingsModalOpen(true)} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2">
-                    <SettingsIcon /> Settings
-                </button>
-                 <div className="relative">
-                    <button data-tooltip="Change the visual theme of your dashboard." onClick={() => setThemeMenuOpen(prev => !prev)} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2">
-                        <PaintBrushIcon /> Theme
-                    </button>
-                    {isThemeMenuOpen && (
-                        <div className="absolute top-full right-0 mt-2 w-48 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg shadow-xl z-20">
-                            {Object.entries(themes).map(([key, value]) => (
-                                <button key={key} onClick={() => { setTheme(key as ThemeName); setThemeMenuOpen(false); }} className={`w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)] ${theme === key ? 'font-bold text-[var(--color-accent)]' : ''}`}>
-                                    {value.name}
-                                </button>
-                            ))}
-                        </div>
-                    )}
-                </div>
-                 <div className="relative">
-                    <button data-tooltip="Export your dashboard." onClick={() => setExportMenuOpen(prev => !prev)} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2">
-                        <ExportIcon /> Export
-                    </button>
-                    {isExportMenuOpen && (
-                        <div className="absolute top-full right-0 mt-2 w-48 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg shadow-xl z-20">
-                            <button data-tooltip="See how your dashboard will look when printed." onClick={() => { setIsPreviewMode(true); setExportMenuOpen(false); }} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)]">Print Preview</button>
-                            <button data-tooltip="Use your browser's print dialog to save the dashboard as a PDF file." onClick={handleExportPDF} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)]">Save as PDF</button>
-                        </div>
-                    )}
-                </div>
                 <div className="relative">
                     <button data-tooltip="Add a new widget to your dashboard." onClick={() => setAddWidgetMenuOpen(prev => !prev)} className="px-4 py-2 text-sm font-semibold text-white bg-green-600 hover:bg-green-500 rounded-lg flex items-center gap-2">
                         <PlusIcon /> Add
@@ -579,6 +553,20 @@ export default function App() {
                         </div>
                     )}
                 </div>
+                 <div className="relative">
+                    <button data-tooltip="Export your dashboard." onClick={() => setExportMenuOpen(prev => !prev)} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2">
+                        <ExportIcon /> Export
+                    </button>
+                    {isExportMenuOpen && (
+                        <div className="absolute top-full right-0 mt-2 w-48 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg shadow-xl z-20">
+                            <button data-tooltip="See how your dashboard will look when printed." onClick={() => { setIsPreviewMode(true); setExportMenuOpen(false); }} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)]">Print Preview</button>
+                            <button data-tooltip="Use your browser's print dialog to save the dashboard as a PDF file." onClick={handleExportPDF} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)]">Save as PDF</button>
+                        </div>
+                    )}
+                </div>
+                <button data-tooltip="Configure dashboard settings, including AI providers and theme." onClick={() => setIsSettingsModalOpen(true)} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2">
+                    <SettingsIcon /> Settings
+                </button>
               </div>
             </header>
             <main className="flex-grow overflow-y-auto p-4 sm:p-6 lg:p-8 printable-area">
@@ -685,6 +673,8 @@ export default function App() {
           onClose={() => setIsSettingsModalOpen(false)}
           onSave={handleSaveAiSettings}
           initialConfigs={aiSettings}
+          currentTheme={theme}
+          onThemeChange={setTheme}
         />
 
         <TitleEditModal

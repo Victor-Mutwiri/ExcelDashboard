@@ -1,14 +1,18 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { Modal } from './Modal';
 import { AIServiceConfig, AIServiceProvider } from '../types';
-import { SaveIcon, PlusIcon, TrashIcon, EyeIcon, EyeOffIcon, SparklesIcon } from './Icons';
+import { SaveIcon, PlusIcon, TrashIcon, EyeIcon, EyeOffIcon, SparklesIcon, PaintBrushIcon } from './Icons';
+import { themes, ThemeName } from '../themes';
 
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (settings: AIServiceConfig[]) => void;
   initialConfigs: AIServiceConfig[];
+  currentTheme: ThemeName;
+  onThemeChange: (theme: ThemeName) => void;
 }
 
 const providerNames: Record<AIServiceProvider, string> = {
@@ -28,7 +32,7 @@ const getModelPlaceholder = (provider: AIServiceProvider) => {
     }
 }
 
-const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onSave, initialConfigs }) => {
+const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onSave, initialConfigs, currentTheme, onThemeChange }) => {
   const [configs, setConfigs] = useState<AIServiceConfig[]>([]);
   const [apiKeysVisible, setApiKeysVisible] = useState<Record<string, boolean>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -111,7 +115,17 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onSave, 
                 <SparklesIcon className="w-5 h-5" />
                 AI Services
               </button>
-              {/* Future settings can be added here */}
+              <button
+                onClick={() => setActiveTab('appearance')}
+                className={`flex items-center gap-3 w-full text-left p-2 rounded-md transition-colors ${
+                  activeTab === 'appearance'
+                    ? 'bg-[var(--bg-accent)] text-[var(--text-on-accent)] font-semibold'
+                    : 'hover:bg-[var(--bg-contrast)]'
+                }`}
+              >
+                <PaintBrushIcon className="w-5 h-5" />
+                Appearance
+              </button>
             </nav>
           </aside>
 
@@ -205,6 +219,30 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onSave, 
                 </div>
               </div>
             )}
+            {activeTab === 'appearance' && (
+              <div className="flex flex-col gap-4 h-full">
+                <div>
+                  <h3 className="text-xl font-bold mb-1">Appearance Settings</h3>
+                  <p className="text-[var(--text-secondary)] text-sm">
+                    Change the look and feel of your dashboard. Changes are applied instantly.
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <label className="font-semibold">Theme</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {Object.entries(themes).map(([key, value]) => (
+                      <button 
+                        key={key} 
+                        onClick={() => onThemeChange(key as ThemeName)} 
+                        className={`p-3 rounded-lg border-2 transition-colors ${currentTheme === key ? 'border-[var(--color-accent)] bg-[var(--bg-accent)]/10' : 'border-transparent bg-[var(--bg-contrast)] hover:border-[var(--color-accent-secondary)]'}`}
+                      >
+                        <span className="font-semibold">{value.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </main>
         </div>
 
@@ -212,9 +250,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onSave, 
           <button type="button" onClick={onClose} className="py-2 px-4 bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg transition-colors">
             Cancel
           </button>
-          <button type="button" onClick={handleSave} className="flex items-center gap-2 py-2 px-4 bg-[var(--bg-accent)] hover:bg-[var(--bg-accent-hover)] text-[var(--text-on-accent)] rounded-lg transition-colors font-semibold">
-            <SaveIcon /> Save Changes
-          </button>
+          {activeTab === 'ai' && (
+            <button type="button" onClick={handleSave} className="flex items-center gap-2 py-2 px-4 bg-[var(--bg-accent)] hover:bg-[var(--bg-accent-hover)] text-[var(--text-on-accent)] rounded-lg transition-colors font-semibold">
+              <SaveIcon /> Save AI Settings
+            </button>
+          )}
         </div>
       </div>
     </Modal>
