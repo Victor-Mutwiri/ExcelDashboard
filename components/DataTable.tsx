@@ -136,11 +136,12 @@ const DataTable: React.FC<DataTableProps> = ({ data, columnsConfig, title }) => 
             onChange={value => setGlobalFilter(String(value))}
             className="w-full pl-10 pr-4 py-2 bg-[var(--bg-input)] border border-[var(--border-color)] rounded-md focus:ring-2 focus:ring-[var(--ring-color)] focus:outline-none"
             placeholder="Search all columns..."
+            data-tooltip="Search across all columns in the table."
           />
         </div>
         <div className="relative">
           <div className="group">
-            <button className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-input)] border border-[var(--border-color)] rounded-md">
+            <button className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-input)] border border-[var(--border-color)] rounded-md" data-tooltip="Select which columns to show or hide in this table.">
                 <EyeOffIcon /> Hide Columns
             </button>
             <div className="absolute right-0 mt-2 w-56 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-md shadow-lg opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-opacity z-10 p-2">

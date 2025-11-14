@@ -156,7 +156,7 @@ const KpiModal: React.FC<KpiModalProps> = ({ isOpen, onClose, data, numericColum
         </div>
 
         <div>
-            <label htmlFor="kpi-computation" className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
+            <label htmlFor="kpi-computation" className="block text-sm font-medium text-[var(--text-secondary)] mb-1" data-tooltip="First, your formula is calculated for each row.&#10;Then, this aggregation (e.g., SUM) is applied to all of those results to get the final KPI value.">
                 Final Aggregation
             </label>
             <select
@@ -167,7 +167,6 @@ const KpiModal: React.FC<KpiModalProps> = ({ isOpen, onClose, data, numericColum
             >
                 {computations.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
-            <p className="text-xs text-[var(--text-tertiary)] mt-1">This computation is applied to the results of your formula from every row.</p>
         </div>
 
         {error && <p className="text-red-400 text-sm mt-2">{error}</p>}

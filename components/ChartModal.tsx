@@ -412,11 +412,11 @@ const ChartModal: React.FC<ChartModalProps> = ({ isOpen, onClose, data, columnCo
                 )}
                 {/* Chart Options */}
                 <div className="pt-3 mt-3 border-t border-[var(--border-color)] space-y-2">
-                    <label className="flex items-center gap-2 cursor-pointer">
+                    <label className="flex items-center gap-2 cursor-pointer" data-tooltip="Display the exact value on top of each bar, line point, or area segment.">
                         <input type="checkbox" checked={showDataLabels} onChange={e => setShowDataLabels(e.target.checked)} className="form-checkbox h-4 w-4 rounded bg-[var(--bg-input)] border-[var(--border-color)] text-[var(--bg-accent)] focus:ring-[var(--ring-color)]" />
                         <span>Show Data Labels</span>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
+                    <label className="flex items-center gap-2 cursor-pointer" data-tooltip="Add a horizontal line to the chart to indicate a target, average, or threshold.">
                         <input type="checkbox" checked={refLine.enabled} onChange={e => setRefLine(prev => ({ ...prev, enabled: e.target.checked }))} className="form-checkbox h-4 w-4 rounded bg-[var(--bg-input)] border-[var(--border-color)] text-[var(--bg-accent)] focus:ring-[var(--ring-color)]" />
                         <span>Add Reference Line</span>
                     </label>

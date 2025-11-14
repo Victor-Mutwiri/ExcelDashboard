@@ -160,13 +160,13 @@ const CalculatedColumnModal: React.FC<CalculatedColumnModalProps> = ({
             {/* Right side: columns & preview */}
             <div className="flex flex-col gap-3">
                 <div className="p-3 bg-black/10 rounded-lg">
-                    <h4 className="font-semibold mb-2">Numeric Columns</h4>
+                    <h4 className="font-semibold mb-2" data-tooltip="Click a column name to add it to your formula.">Numeric Columns</h4>
                     <div className="flex flex-wrap gap-2">
                         {numericColumns.map(c => <button type="button" key={c.id} onClick={() => handleAddToken({type: 'column', value: `{${c.id}}`, text: c.label})} className="px-2 py-1 bg-[var(--bg-accent)] hover:bg-[var(--bg-accent-hover)] text-[var(--text-on-accent)] rounded-md text-sm truncate">{c.label}</button>)}
                     </div>
                 </div>
                  <div className="p-3 bg-black/10 rounded-lg flex-grow">
-                    <h4 className="font-semibold mb-2">Live Preview</h4>
+                    <h4 className="font-semibold mb-2" data-tooltip="See a sample calculation with random values to verify your formula.">Live Preview</h4>
                     <div className="text-sm space-y-2">
                         {livePreview.error ? (
                             <p className="text-[var(--text-tertiary)]">{livePreview.error}</p>

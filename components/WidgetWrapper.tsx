@@ -238,7 +238,7 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = ({ widget, data, columnConfi
         <header className="flex items-center p-4 border-b border-[var(--border-color)]">
           <div className="w-8 flex-shrink-0">
             {widget.type !== 'title' && (
-              <div className="cursor-grab" onMouseDown={(e) => e.stopPropagation()}>
+              <div className="cursor-grab" onMouseDown={(e) => e.stopPropagation()} data-tooltip="Drag to reorder this widget on the dashboard.">
                 <DragHandleIcon className="text-[var(--text-tertiary)]" />
               </div>
             )}
@@ -247,7 +247,7 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = ({ widget, data, columnConfi
             <h3 className="font-bold truncate" title={title}>{widget.type === 'title' ? "Report Title" : title}</h3>
           </div>
           <div className="w-8 relative noprint flex-shrink-0 flex justify-end">
-            <button onClick={() => setIsMenuOpen(prev => !prev)} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
+            <button onClick={() => setIsMenuOpen(prev => !prev)} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)]" data-tooltip="Widget options">
               <EllipsisVerticalIcon />
             </button>
             {isMenuOpen && (
@@ -264,14 +264,14 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = ({ widget, data, columnConfi
                 )}
                 <div className="border-t border-[var(--border-color)] p-1">
                   {(widget.type === 'chart' || widget.type === 'title') && (
-                    <button onClick={() => { onEdit(); setIsMenuOpen(false); }} className="w-full text-left flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-[var(--bg-contrast-hover)] rounded-md">
+                    <button onClick={() => { onEdit(); setIsMenuOpen(false); }} className="w-full text-left flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-[var(--bg-contrast-hover)] rounded-md" data-tooltip="Edit this widget's configuration.">
                       <PencilIcon /> Edit
                     </button>
                   )}
-                  <button onClick={() => { onHide(); setIsMenuOpen(false); }} className="w-full text-left flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-[var(--bg-contrast-hover)] rounded-md">
+                  <button onClick={() => { onHide(); setIsMenuOpen(false); }} className="w-full text-left flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-[var(--bg-contrast-hover)] rounded-md" data-tooltip="Hide this widget. You can restore it later from the 'Hidden' menu in the header.">
                     <EyeOffIcon /> Hide
                   </button>
-                  <button onClick={onDelete} className="w-full text-left flex items-center gap-2 px-3 py-1.5 text-sm text-red-500 hover:bg-red-500/20 rounded-md">
+                  <button onClick={onDelete} className="w-full text-left flex items-center gap-2 px-3 py-1.5 text-sm text-red-500 hover:bg-red-500/20 rounded-md" data-tooltip="Permanently delete this widget from the dashboard.">
                     <TrashIcon /> Delete
                   </button>
                 </div>

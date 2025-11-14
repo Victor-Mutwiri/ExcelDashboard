@@ -37,6 +37,7 @@ const ManageHiddenWidgetsModal: React.FC<ManageHiddenWidgetsModalProps> = ({ isO
                 <button
                   onClick={() => onToggleVisibility(widget.id)}
                   className="flex items-center gap-2 bg-[var(--bg-accent)] hover:bg-[var(--bg-accent-hover)] text-[var(--text-on-accent)] font-semibold py-2 px-4 rounded-lg transition-all text-sm"
+                  data-tooltip="Make this widget visible on the dashboard again."
                 >
                   <EyeIcon /> Show
                 </button>

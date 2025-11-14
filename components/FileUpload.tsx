@@ -102,6 +102,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, onDataPaste, onOp
         <button 
             onClick={onOpenLoadModal}
             className="flex items-center justify-center gap-2 mx-auto text-[var(--color-accent)] font-semibold hover:text-[var(--color-accent-secondary)] transition-colors"
+            data-tooltip="Resume your work on a previously saved dashboard."
         >
             <FolderOpenIcon /> Or load a saved dashboard
         </button>
