@@ -1,0 +1,5 @@
+{
+  "name": "ExcelDashboard",
+  "description": "An interactive dashboard generator. Upload an Excel or CSV file to instantly turn your spreadsheet into a beautiful, interactive dashboard with charts, sorting, and filtering capabilities.",
+  "requestFramePermissions": []
+}
