@@ -228,6 +228,11 @@ const ChartModal: React.FC<ChartModalProps> = ({ isOpen, onClose, data, columnCo
 
     const dataLabelFormatter = (value: number) => value.toLocaleString(undefined, { maximumFractionDigits: 0 });
 
+    const yAxisDomain = [
+      (dataMin: number) => Math.floor(Math.min(0, dataMin) * 1.1),
+      (dataMax: number) => Math.ceil(Math.max(0, dataMax) * 1.1)
+    ];
+
     return (
       <ResponsiveContainer width="100%" height="100%">
         {chartType === 'pie' ? (
@@ -239,7 +244,9 @@ const ChartModal: React.FC<ChartModalProps> = ({ isOpen, onClose, data, columnCo
               cx="50%" 
               cy="50%" 
               outerRadius={150} 
-              label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+              labelLine={false}
+              label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+            >
               {aggregatedData.map((_entry, index) => <Cell key={`cell-${index}`} fill={chartColors[index % chartColors.length]} />)}
             </Pie>
             <Tooltip contentStyle={tooltipStyle} />
@@ -249,8 +256,8 @@ const ChartModal: React.FC<ChartModalProps> = ({ isOpen, onClose, data, columnCo
           <ChartComponent data={aggregatedData}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
             <XAxis dataKey={xAxisKey} stroke="var(--text-secondary)" interval={0} angle={-30} textAnchor="end" height={80} tick={{ fontSize: 11 }} />
-            <YAxis yAxisId="left" orientation="left" stroke="var(--text-secondary)" />
-            {hasLineSeries && <YAxis yAxisId="right" orientation="right" stroke={seriesColors[lineSeriesKeys[0]] || '#82ca9d'} />}
+            <YAxis yAxisId="left" orientation="left" stroke="var(--text-secondary)" domain={yAxisDomain} />
+            {hasLineSeries && <YAxis yAxisId="right" orientation="right" stroke={seriesColors[lineSeriesKeys[0]] || '#82ca9d'} domain={yAxisDomain} />}
             <Tooltip contentStyle={tooltipStyle} />
             <Legend />
             {refLine.enabled && <ReferenceLine yAxisId="left" y={refLine.value} label={refLine.label} stroke={refLine.color} strokeDasharray="3 3" />}

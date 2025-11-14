@@ -115,6 +115,10 @@ const ChartRenderer: React.FC<{ widget: ChartWidget; data: RowData[]; chartColor
 
   const ChartComponent = { bar: BarChart, line: LineChart, area: AreaChart, pie: PieChart }[effectiveChartType];
   const dataLabelFormatter = (value: number) => value.toLocaleString(undefined, { maximumFractionDigits: 0 });
+  const yAxisDomain = [
+    (dataMin: number) => Math.floor(Math.min(0, dataMin) * 1.1),
+    (dataMax: number) => Math.ceil(Math.max(0, dataMax) * 1.1)
+  ];
 
   return (
     <>
@@ -129,7 +133,16 @@ const ChartRenderer: React.FC<{ widget: ChartWidget; data: RowData[]; chartColor
         <ResponsiveContainer width="100%" height={300}>
           {chartType === 'pie' ? (
             <PieChart>
-              <Pie data={aggregatedData.map(row => ({ name: String(row[xAxisKey]), value: row[yAxisKeys[0]] as number }))} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label>
+              <Pie 
+                data={aggregatedData.map(row => ({ name: String(row[xAxisKey]), value: row[yAxisKeys[0]] as number }))} 
+                dataKey="value" 
+                nameKey="name" 
+                cx="50%" 
+                cy="50%" 
+                outerRadius={100} 
+                labelLine={false}
+                label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+              >
                 {aggregatedData.map((_entry, index) => <Cell key={`cell-${index}`} fill={seriesColors[yAxisKeys[0]] || chartColors[index % chartColors.length]} />)}
               </Pie>
               <Tooltip content={<CustomTooltip />} />
@@ -139,8 +152,8 @@ const ChartRenderer: React.FC<{ widget: ChartWidget; data: RowData[]; chartColor
             <ChartComponent data={aggregatedData}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
               <XAxis dataKey={xAxisKey} stroke="var(--text-secondary)" tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} interval={0} angle={-45} textAnchor="end" height={100} />
-              <YAxis yAxisId="left" orientation="left" stroke="var(--text-secondary)" tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} />
-              {hasLineSeries && <YAxis yAxisId="right" orientation="right" stroke={seriesColors[lineSeriesKeys[0]] || '#82ca9d'} tick={{ fill: seriesColors[lineSeriesKeys[0]] || '#82ca9d', fontSize: 12 }} />}
+              <YAxis yAxisId="left" orientation="left" stroke="var(--text-secondary)" tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} domain={yAxisDomain} />
+              {hasLineSeries && <YAxis yAxisId="right" orientation="right" stroke={seriesColors[lineSeriesKeys[0]] || '#82ca9d'} tick={{ fill: seriesColors[lineSeriesKeys[0]] || '#82ca9d', fontSize: 12 }} domain={yAxisDomain} />}
               <Tooltip content={<CustomTooltip />} />
               <Legend />
               {referenceLine && <ReferenceLine yAxisId="left" y={referenceLine.value} label={referenceLine.label} stroke={referenceLine.color} strokeDasharray="3 3" />}
