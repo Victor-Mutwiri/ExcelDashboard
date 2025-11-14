@@ -97,12 +97,19 @@ export interface TextWidget extends BaseWidget {
 }
 
 // AI Insight Widget
+export interface StructuredInsight {
+  insight_title: string;
+  insight_summary: string;
+  analysis_details: string;
+  actionable_recommendation: string;
+  confidence_level: 'High' | 'Medium' | 'Low';
+}
+
 export interface AIInsightWidgetConfig {
   title: string;
   selectedColumns: string[]; // Using column labels
-  prompt: string;
   aiServiceId: string;
-  insight: string; // The generated markdown content
+  insight: StructuredInsight[]; // The generated structured content
   status: 'idle' | 'loading' | 'success' | 'error';
   errorMessage?: string;
 }

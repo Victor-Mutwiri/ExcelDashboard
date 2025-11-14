@@ -8,7 +8,7 @@ interface AIInsightModalProps {
   onClose: () => void;
   columnConfig: ColumnConfig[];
   aiSettings: AIServiceConfig[];
-  onGenerate: (config: { title: string; selectedColumns: string[]; prompt: string; aiServiceId: string }) => void;
+  onGenerate: (config: { title: string; selectedColumns: string[]; aiServiceId: string }) => void;
 }
 
 const providerNames: Record<AIServiceProvider, string> = {
@@ -21,7 +21,6 @@ const providerNames: Record<AIServiceProvider, string> = {
 const AIInsightModal: React.FC<AIInsightModalProps> = ({ isOpen, onClose, columnConfig, aiSettings, onGenerate }) => {
   const [title, setTitle] = useState('');
   const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
-  const [prompt, setPrompt] = useState('');
   const [aiServiceId, setAiServiceId] = useState<string>('');
   const [error, setError] = useState('');
 
@@ -29,7 +28,6 @@ const AIInsightModal: React.FC<AIInsightModalProps> = ({ isOpen, onClose, column
     if (isOpen) {
       setTitle('AI Data Insight');
       setSelectedColumns([]);
-      setPrompt('');
       setAiServiceId(aiSettings.length > 0 ? aiSettings[0].id : '');
       setError('');
     }
@@ -56,7 +54,7 @@ const AIInsightModal: React.FC<AIInsightModalProps> = ({ isOpen, onClose, column
       return;
     }
 
-    onGenerate({ title: title.trim(), selectedColumns, prompt, aiServiceId });
+    onGenerate({ title: title.trim(), selectedColumns, aiServiceId });
     onClose();
   };
 
@@ -84,17 +82,6 @@ const AIInsightModal: React.FC<AIInsightModalProps> = ({ isOpen, onClose, column
                   </label>
                 ))}
             </div>
-        </div>
-
-        <div>
-            <label htmlFor="ai-prompt" className="block text-sm font-medium text-[var(--text-secondary)] mb-1">Specific Question (Optional)</label>
-            <textarea
-              id="ai-prompt"
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder="e.g., Is there a correlation between Sales and Marketing Spend?"
-              className="w-full h-24 bg-[var(--bg-input)] border border-[var(--border-color)] rounded-md p-3 focus:ring-2 focus:ring-[var(--ring-color)] focus:outline-none text-sm"
-            />
         </div>
 
         <div>

@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { AppState, ColumnConfig, RowData, ParsedFile, SavedDashboard, AnyWidget, ChartWidgetConfig, KpiWidgetConfig, WidgetSize, TextWidgetConfig, TitleWidgetConfig, AIServiceConfig, AIInsightWidget, AIInsightWidgetConfig } from './types';
+import { AppState, ColumnConfig, RowData, ParsedFile, SavedDashboard, AnyWidget, ChartWidgetConfig, KpiWidgetConfig, WidgetSize, TextWidgetConfig, TitleWidgetConfig, AIServiceConfig, AIInsightWidget, StructuredInsight } from './types';
 import FileUpload from './components/FileUpload';
 import DataConfiguration from './components/DataConfiguration';
 import DashboardCanvas from './components/DashboardCanvas';
@@ -300,7 +300,7 @@ export default function App() {
     setIsKpiModalOpen(false);
   };
 
-  const handleGenerateAIInsight = async (config: { title: string; selectedColumns: string[]; prompt: string; aiServiceId: string }) => {
+  const handleGenerateAIInsight = async (config: { title: string; selectedColumns: string[]; aiServiceId: string }) => {
     const newWidgetId = `ai-${Date.now()}`;
     const newAiWidget: AIInsightWidget = {
         id: newWidgetId,
@@ -308,7 +308,7 @@ export default function App() {
         size: '1/2',
         config: {
             ...config,
-            insight: '',
+            insight: [],
             status: 'loading',
         }
     };
@@ -320,19 +320,32 @@ export default function App() {
             throw new Error("Selected AI service configuration not found.");
         }
         
-        const insightText = await generateInsight(data, config, aiService);
+        const insightJsonString = await generateInsight(data, config, aiService);
 
-        // FIX: The type of `w` is a union. We must narrow it to `AIInsightWidget` before accessing `w.config`.
+        let parsedResponse: { insights: StructuredInsight[] };
+        try {
+            // The AI might return markdown with a JSON block. Need to extract it.
+            const jsonMatch = insightJsonString.match(/```json\n([\s\S]*?)\n```/);
+            const jsonToParse = jsonMatch ? jsonMatch[1] : insightJsonString;
+            parsedResponse = JSON.parse(jsonToParse);
+        } catch (e) {
+            console.error("Failed to parse AI response as JSON:", insightJsonString);
+            throw new Error("The AI returned an invalid response format. Please try again.");
+        }
+        
+        if (!parsedResponse.insights || !Array.isArray(parsedResponse.insights)) {
+             throw new Error("The AI response is missing the 'insights' array.");
+        }
+
         setWidgets(prev => prev.map(w => {
             if (w.id === newWidgetId && w.type === 'ai') {
-                return { ...w, config: { ...w.config, insight: insightText, status: 'success' } };
+                return { ...w, config: { ...w.config, insight: parsedResponse.insights, status: 'success' } };
             }
             return w;
         }));
 
     } catch (error: any) {
         console.error("Error generating AI insight:", error);
-        // FIX: The type of `w` is a union. We must narrow it to `AIInsightWidget` before accessing `w.config`.
         setWidgets(prev => prev.map(w => {
             if (w.id === newWidgetId && w.type === 'ai') {
                 return { ...w, config: { ...w.config, status: 'error', errorMessage: error.message || 'Failed to generate insight.' } };

@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 import { RowData, AIInsightWidgetConfig, AIServiceConfig } from '../types';
 
 function getSampleData(data: RowData[], selectedColumns: string[]): string {
@@ -18,10 +18,62 @@ function getSampleData(data: RowData[], selectedColumns: string[]): string {
     }
 }
 
+const systemInstructionObject = {
+  "role": "You are a specialized, expert Data Analyst AI for a business intelligence (BI) platform. Your function is to analyze the provided dataset (column information and data sample) and deliver actionable, concise business insights.",
+  "analysis_goal": "Generate 3-5 high-value, non-obvious business insights that explain performance, trends, or anomalies, and suggest next steps.",
+  "output_format": {
+    "array_name": "insights",
+    "required_number_of_insights": "minimum 3, maximum 5",
+    "schema": {
+      "insight_title": "string (A descriptive, 3-5 word title)",
+      "insight_summary": "string (A 1-2 sentence summary of the key finding)",
+      "analysis_details": "string (A brief explanation of how the insight was derived, referencing specific columns/data points)",
+      "actionable_recommendation": "string (A clear, practical business step the user should take based on this insight)",
+      "confidence_level": "string (High, Medium, or Low, based on data clarity and depth)"
+    }
+  },
+  "analysis_protocol": [
+    "1. **Understand Context:** Review the provided column headers to understand the domain (e.g., Sales, HR, Marketing).",
+    "2. **Identify Key Metrics:** Determine the core metrics (e.g., 'Revenue', 'Cost', 'Count') and categorical dimensions (e.g., 'Region', 'Product', 'Date').",
+    "3. **Detect Anomalies/Trends:** Look for unexpected peaks, dips, correlations, or disproportionate representation across dimensions.",
+    "4. **Formulate Hypothesis:** Create a hypothesis for *why* the observation occurred (e.g., 'Region X has low sales due to low inventory').",
+    "5. **Synthesize Insight:** Convert the observation and hypothesis into a clear, non-obvious business insight.",
+    "6. **Provide Action:** For every insight, propose a concrete, actionable step (e.g., 'Investigate inventory levels in Region X')."
+  ],
+  "constraints_and_guardrails": [
+    "DO NOT generate purely descriptive statements (e.g., 'The highest revenue was in January.'). Insights must explain *why* or suggest *what to do*.",
+    "DO NOT use the exact raw data values unless necessary for context. Focus on relative comparisons and trends.",
+    "The final output MUST be named 'insights' conforming strictly to the defined schema.",
+    "If the data sample is too small or irrelevant, state this in the 'analysis_details' of the first insight, but still attempt to provide structure-based insights."
+  ]
+};
+
+const responseSchema = {
+    type: Type.OBJECT,
+    properties: {
+        insights: {
+            type: Type.ARRAY,
+            items: {
+                type: Type.OBJECT,
+                properties: {
+                    insight_title: { type: Type.STRING },
+                    insight_summary: { type: Type.STRING },
+                    analysis_details: { type: Type.STRING },
+                    actionable_recommendation: { type: Type.STRING },
+                    confidence_level: { type: Type.STRING },
+                },
+                required: ["insight_title", "insight_summary", "analysis_details", "actionable_recommendation", "confidence_level"]
+            }
+        }
+    },
+    required: ["insights"]
+};
+
+const systemInstruction = JSON.stringify(systemInstructionObject, null, 2);
+
 
 async function generateGeminiInsight(
     userPrompt: string,
-    systemInstruction: string,
     aiService: AIServiceConfig
 ): Promise<string> {
     const ai = new GoogleGenAI({ apiKey: aiService.apiKey });
@@ -31,6 +83,8 @@ async function generateGeminiInsight(
             contents: userPrompt,
             config: {
                 systemInstruction: systemInstruction,
+                responseMimeType: "application/json",
+                responseSchema: responseSchema,
             }
         });
         return response.text;
@@ -45,7 +99,6 @@ async function generateGeminiInsight(
 
 async function generateOpenAICompatibleInsight(
     userPrompt: string,
-    systemInstruction: string,
     aiService: AIServiceConfig
 ): Promise<string> {
     const { provider, apiKey, model, baseURL } = aiService;
@@ -77,6 +130,7 @@ async function generateOpenAICompatibleInsight(
                     { role: 'user', content: userPrompt }
                 ],
                 stream: false,
+                response_format: { type: 'json_object' },
             }),
         });
 
@@ -113,8 +167,6 @@ export async function generateInsight(
     }
 
     const sampleDataJSON = getSampleData(data, widgetConfig.selectedColumns);
-
-    const systemInstruction = `You are an expert data analyst. Your task is to find a concise and valuable insight from a provided data sample. The response should be in Markdown format and directly address the user's request if one is provided. Focus on trends, correlations, or anomalies.`;
     
     const userPrompt = `
 Analyze the following data sample which has the columns: ${widgetConfig.selectedColumns.join(', ')}.
@@ -122,18 +174,16 @@ Analyze the following data sample which has the columns: ${widgetConfig.selected
 Data sample (JSON format):
 ${sampleDataJSON}
 
-${widgetConfig.prompt ? `The user is specifically asking: "${widgetConfig.prompt}"` : 'Provide a general insight about this data.'}
-
-Please provide your analysis.
+Based on the analysis protocol, generate your insights. The final output must be a JSON object with a single key "insights", which is an array of insight objects.
 `;
     
     switch (aiService.provider) {
         case 'gemini':
-            return generateGeminiInsight(userPrompt, systemInstruction, aiService);
+            return generateGeminiInsight(userPrompt, aiService);
         case 'openai':
         case 'groq':
         case 'custom':
-            return generateOpenAICompatibleInsight(userPrompt, systemInstruction, aiService);
+            return generateOpenAICompatibleInsight(userPrompt, aiService);
         default:
             throw new Error(`Unsupported AI provider: ${aiService.provider}`);
     }
