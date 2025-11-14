@@ -26,7 +26,7 @@ export interface ComputationResult {
 
 // --- WIDGETS ---
 export type WidgetSize = '1/4' | '1/3' | '1/2' | '2/3' | 'full';
-export type WidgetType = 'datatable' | 'chart' | 'kpi' | 'title' | 'text';
+export type WidgetType = 'datatable' | 'chart' | 'kpi' | 'title' | 'text' | 'ai';
 
 export interface BaseWidget {
   id: string;
@@ -96,8 +96,23 @@ export interface TextWidget extends BaseWidget {
   config: TextWidgetConfig;
 }
 
+// AI Insight Widget
+export interface AIInsightWidgetConfig {
+  title: string;
+  selectedColumns: string[]; // Using column labels
+  prompt: string;
+  aiServiceId: string;
+  insight: string; // The generated markdown content
+  status: 'idle' | 'loading' | 'success' | 'error';
+  errorMessage?: string;
+}
+export interface AIInsightWidget extends BaseWidget {
+  type: 'ai';
+  config: AIInsightWidgetConfig;
+}
 
-export type AnyWidget = DataTableWidget | ChartWidget | KpiWidget | TitleWidget | TextWidget;
+
+export type AnyWidget = DataTableWidget | ChartWidget | KpiWidget | TitleWidget | TextWidget | AIInsightWidget;
 // --- END WIDGETS ---
 
 export interface SavedDashboard {
@@ -107,4 +122,15 @@ export interface SavedDashboard {
   columnConfig: ColumnConfig[];
   fileName: string;
   widgets: AnyWidget[];
+}
+
+// --- AI SETTINGS ---
+export type AIServiceProvider = 'gemini' | 'openai' | 'groq' | 'custom';
+
+export interface AIServiceConfig {
+  id: string;
+  provider: AIServiceProvider;
+  apiKey: string;
+  model: string;
+  baseURL?: string;
 }

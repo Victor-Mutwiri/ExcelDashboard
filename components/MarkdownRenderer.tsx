@@ -44,11 +44,14 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
                 // Add to the existing list
                 const lastElement = elements[elements.length - 1];
                 if(lastElement && lastElement.type === 'ul') {
+                    // FIX: Cast lastElement to a specific ReactElement type to inform TypeScript about the shape of its props,
+                    // resolving errors when accessing `children` and spreading `props`.
+                    const ulElement = lastElement as React.ReactElement<React.HTMLProps<HTMLUListElement>>;
                     // Fix: Correctly handle adding children to an existing list element.
                     // The previous implementation would fail if `props.children` was a single element and not an array.
-                    const existingChildren = React.Children.toArray(lastElement.props.children);
-                    const newProps = {...lastElement.props, children: [...existingChildren, <li key={index}>{renderInline(listContent)}</li>]};
-                    elements[elements.length - 1] = React.cloneElement(lastElement, newProps);
+                    const existingChildren = React.Children.toArray(ulElement.props.children);
+                    const newProps = {...ulElement.props, children: [...existingChildren, <li key={index}>{renderInline(listContent)}</li>]};
+                    elements[elements.length - 1] = React.cloneElement(ulElement, newProps);
                 }
             }
         } else {

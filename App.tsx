@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { AppState, ColumnConfig, RowData, ParsedFile, SavedDashboard, AnyWidget, ChartWidgetConfig, KpiWidgetConfig, WidgetSize, TextWidgetConfig, TitleWidgetConfig } from './types';
+import { AppState, ColumnConfig, RowData, ParsedFile, SavedDashboard, AnyWidget, ChartWidgetConfig, KpiWidgetConfig, WidgetSize, TextWidgetConfig, TitleWidgetConfig, AIServiceConfig, AIInsightWidget, AIInsightWidgetConfig } from './types';
 import FileUpload from './components/FileUpload';
 import DataConfiguration from './components/DataConfiguration';
 import DashboardCanvas from './components/DashboardCanvas';
@@ -10,11 +10,14 @@ import SaveDashboardModal from './components/SaveDashboardModal';
 import KpiModal from './components/KpiModal';
 import TitleModal from './components/TitleModal';
 import TextModal from './components/TextModal';
+import SettingsModal from './components/SettingsModal';
+import AIInsightModal from './components/AIInsightModal';
 import Toast from './components/Toast';
 import LandingPage from './components/LandingPage';
 import ManageHiddenWidgetsModal from './components/ManageHiddenWidgetsModal';
 import { parseFile, processData } from './utils/fileParser';
-import { ChartIcon, PlusIcon, ResetIcon, SaveIcon, FolderOpenIcon, KpiIcon, TableIcon, ExportIcon, PaintBrushIcon, EyeIcon, CloseIcon, TitleIcon, BackIcon, CalculatorIcon, TextIcon } from './components/Icons';
+import { generateInsight } from './utils/ai';
+import { ChartIcon, PlusIcon, ResetIcon, SaveIcon, FolderOpenIcon, KpiIcon, TableIcon, ExportIcon, PaintBrushIcon, EyeIcon, CloseIcon, TitleIcon, BackIcon, CalculatorIcon, TextIcon, SparklesIcon } from './components/Icons';
 import { themes, ThemeName } from './themes';
 import { isPotentiallyNumeric } from './utils/dataCleaner';
 
@@ -37,7 +40,9 @@ export default function App() {
   const [isKpiModalOpen, setIsKpiModalOpen] = useState(false);
   const [isTitleModalOpen, setIsTitleModalOpen] = useState(false);
   const [isTextModalOpen, setIsTextModalOpen] = useState(false);
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [isManageHiddenOpen, setIsManageHiddenOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [editingWidgetId, setEditingWidgetId] = useState<string | null>(null);
 
   const [isAddWidgetMenuOpen, setAddWidgetMenuOpen] = useState(false);
@@ -48,6 +53,7 @@ export default function App() {
 
 
   const [savedDashboards, setSavedDashboards] = useState<SavedDashboard[]>([]);
+  const [aiSettings, setAiSettings] = useState<AIServiceConfig[]>([]);
   const [theme, setTheme] = useState<ThemeName>(() => {
     return (localStorage.getItem('dashboard-theme') as ThemeName) || 'light';
   });
@@ -69,9 +75,14 @@ export default function App() {
       if (storedDashboards) {
         setSavedDashboards(JSON.parse(storedDashboards));
       }
+      const storedAiSettings = localStorage.getItem('ai_settings');
+      if (storedAiSettings) {
+        setAiSettings(JSON.parse(storedAiSettings));
+      }
     } catch (error) {
-      console.error("Failed to load dashboards from localStorage", error);
+      console.error("Failed to load data from localStorage", error);
       setSavedDashboards([]);
+      setAiSettings([]);
     }
   }, []);
   
@@ -221,6 +232,13 @@ export default function App() {
     localStorage.setItem('dashboards', JSON.stringify(updatedDashboards));
   };
   
+  const handleSaveAiSettings = (settings: AIServiceConfig[]) => {
+    setAiSettings(settings);
+    localStorage.setItem('ai_settings', JSON.stringify(settings));
+    setIsSettingsModalOpen(false);
+    setToast({ message: 'AI settings saved!', type: 'success' });
+  };
+
   const handleSaveChart = (config: ChartWidgetConfig) => {
     if (editingWidgetId) {
       setWidgets(prev => prev.map(w => (w.id === editingWidgetId && w.type === 'chart' ? { ...w, config } : w)));
@@ -241,10 +259,8 @@ export default function App() {
     const existingTitle = widgets.find(w => w.type === 'title');
     
     if (existingTitle) {
-      // Update existing title
-      setWidgets(prev => prev.map(w => w.id === existingTitle.id ? { ...w, config } : w));
+      setWidgets(prev => prev.map(w => (w.id === existingTitle.id && w.type === 'title' ? { ...w, config } : w)));
     } else {
-      // Add new title to the top
       const newTitleWidget: AnyWidget = {
           id: `title-${Date.now()}`,
           type: 'title',
@@ -283,6 +299,48 @@ export default function App() {
     setWidgets(prev => [...prev, newKpiWidget]);
     setIsKpiModalOpen(false);
   };
+
+  const handleGenerateAIInsight = async (config: { title: string; selectedColumns: string[]; prompt: string; aiServiceId: string }) => {
+    const newWidgetId = `ai-${Date.now()}`;
+    const newAiWidget: AIInsightWidget = {
+        id: newWidgetId,
+        type: 'ai',
+        size: '1/2',
+        config: {
+            ...config,
+            insight: '',
+            status: 'loading',
+        }
+    };
+    setWidgets(prev => [...prev, newAiWidget]);
+
+    try {
+        const aiService = aiSettings.find(s => s.id === config.aiServiceId);
+        if (!aiService) {
+            throw new Error("Selected AI service configuration not found.");
+        }
+        
+        const insightText = await generateInsight(data, config, aiService);
+
+        // FIX: The type of `w` is a union. We must narrow it to `AIInsightWidget` before accessing `w.config`.
+        setWidgets(prev => prev.map(w => {
+            if (w.id === newWidgetId && w.type === 'ai') {
+                return { ...w, config: { ...w.config, insight: insightText, status: 'success' } };
+            }
+            return w;
+        }));
+
+    } catch (error: any) {
+        console.error("Error generating AI insight:", error);
+        // FIX: The type of `w` is a union. We must narrow it to `AIInsightWidget` before accessing `w.config`.
+        setWidgets(prev => prev.map(w => {
+            if (w.id === newWidgetId && w.type === 'ai') {
+                return { ...w, config: { ...w.config, status: 'error', errorMessage: error.message || 'Failed to generate insight.' } };
+            }
+            return w;
+        }));
+    }
+};
   
   const handleDeleteWidget = (id: string) => {
     setWidgets(prev => prev.filter(w => w.id !== id));
@@ -312,11 +370,12 @@ export default function App() {
     setWidgets(prev => prev.map(w => w.id === id ? { ...w, size } : w));
   };
 
-  const handleAddWidget = (type: 'chart' | 'kpi' | 'datatable' | 'title' | 'calc' | 'text') => {
+  const handleAddWidget = (type: 'chart' | 'kpi' | 'datatable' | 'title' | 'calc' | 'text' | 'ai') => {
     setAddWidgetMenuOpen(false);
     if (type === 'chart') setIsChartModalOpen(true);
     if (type === 'kpi') setIsKpiModalOpen(true);
     if (type === 'text') setIsTextModalOpen(true);
+    if (type === 'ai') setIsAiModalOpen(true);
     if (type === 'calc') setIsCalcModalOpen(true);
     if (type === 'title') {
       const existingTitle = widgets.find(w => w.type === 'title');
@@ -380,7 +439,7 @@ export default function App() {
         );
       case 'DASHBOARD':
         return (
-          <div className="w-full min-h-screen flex flex-col p-4 sm:p-6 lg:p-8 gap-6">
+          <div className="w-full min-h-screen flex flex-col">
             {isPreviewMode && (
                 <div className="fixed top-0 left-0 right-0 bg-gray-800 text-white p-3 flex justify-center items-center gap-4 z-50">
                     <p className="font-semibold">Print Preview Mode</p>
@@ -389,7 +448,7 @@ export default function App() {
                     </button>
                 </div>
             )}
-            <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 noprint bg-[var(--bg-header)] theme-corporate:text-white p-4 rounded-xl shadow-md">
+            <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 noprint bg-[var(--bg-header)] theme-corporate:text-white px-4 sm:px-6 lg:px-8 py-4 border-b border-[var(--border-color)] shadow-sm">
               <div>
                 <h1 className="text-2xl font-bold">{fileName}</h1>
                 <p className="text-[var(--text-secondary)]">Your interactive dashboard is ready.</p>
@@ -411,6 +470,9 @@ export default function App() {
                 </button>
                 <button data-tooltip="Save your current dashboard layout, widgets, and data." onClick={() => setIsSaveModalOpen(true)} className="px-4 py-2 text-sm font-semibold text-[var(--text-on-accent)] bg-[var(--bg-accent)] hover:bg-[var(--bg-accent-hover)] rounded-lg flex items-center gap-2">
                   <SaveIcon /> Save
+                </button>
+                <button data-tooltip="Configure AI provider settings for upcoming features." onClick={() => setIsSettingsModalOpen(true)} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2">
+                    <SparklesIcon /> AI Settings
                 </button>
                  <div className="relative">
                     <button data-tooltip="Change the visual theme of your dashboard." onClick={() => setThemeMenuOpen(prev => !prev)} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2">
@@ -449,13 +511,14 @@ export default function App() {
                             <button data-tooltip="Add a rich text block for comments, analysis, or notes." onClick={() => handleAddWidget('text')} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)]"><TextIcon /> Text Block</button>
                             <button data-tooltip="Add a searchable, sortable table of your raw data." onClick={() => handleAddWidget('datatable')} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)]"><TableIcon /> Data Table</button>
                             <div className="border-t border-[var(--border-color)] my-1"></div>
+                            <button data-tooltip="Generate an insight from your data using AI." onClick={() => handleAddWidget('ai')} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)]"><SparklesIcon /> AI Insight</button>
                             <button data-tooltip="Create a new column by performing calculations on existing numeric columns." onClick={() => handleAddWidget('calc')} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)]"><CalculatorIcon /> Calculated Column</button>
                         </div>
                     )}
                 </div>
               </div>
             </header>
-            <main className="flex-grow overflow-auto -m-3 p-3 printable-area">
+            <main className="flex-grow overflow-y-auto p-4 sm:p-6 lg:p-8 printable-area">
               <DashboardCanvas 
                 widgets={widgets}
                 setWidgets={setWidgets}
@@ -475,7 +538,7 @@ export default function App() {
 
   const rootContainerClasses = appState === 'DASHBOARD'
     ? "min-h-screen"
-    : "min-h-screen flex items-center justify-center";
+    : "min-h-screen flex items-center justify-center p-4";
 
   return (
     <div className={rootContainerClasses}>
@@ -514,6 +577,14 @@ export default function App() {
           onSave={handleSaveText}
           initialConfig={widgetToEdit?.type === 'text' ? widgetToEdit.config : undefined}
         />
+        
+        <AIInsightModal
+          isOpen={isAiModalOpen}
+          onClose={() => setIsAiModalOpen(false)}
+          columnConfig={columnConfig}
+          aiSettings={aiSettings}
+          onGenerate={handleGenerateAIInsight}
+        />
 
         <CalculatedColumnModal 
           isOpen={isCalcModalOpen}
@@ -544,6 +615,13 @@ export default function App() {
           onClose={() => setIsSaveModalOpen(false)}
           onSave={handleSaveDashboard}
           existingNames={savedDashboards.map(d => d.name)}
+        />
+        
+        <SettingsModal
+          isOpen={isSettingsModalOpen}
+          onClose={() => setIsSettingsModalOpen(false)}
+          onSave={handleSaveAiSettings}
+          initialConfigs={aiSettings}
         />
 
         <ManageHiddenWidgetsModal

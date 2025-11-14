@@ -1,11 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { ResponsiveContainer, BarChart, Bar, LineChart, Line, PieChart, Pie, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell, ReferenceLine, TooltipProps, LabelList } from 'recharts';
-import { AnyWidget, RowData, ColumnConfig, WidgetSize, ChartWidget, KpiWidget, TitleWidget, DataTableWidget, TextWidget } from '../types';
+import { AnyWidget, RowData, ColumnConfig, WidgetSize, ChartWidget, KpiWidget, TitleWidget, DataTableWidget, TextWidget, AIInsightWidget } from '../types';
 import { DragHandleIcon, EllipsisVerticalIcon, TrashIcon, EyeOffIcon, PencilIcon } from './Icons';
 import DataTable from './DataTable';
 import KpiWidgetComponent from './KpiWidget';
 import MarkdownRenderer from './MarkdownRenderer';
 import { professionalFonts } from './TitleModal';
+import AIInsightWidgetComponent from './AIInsightWidgetComponent';
 
 interface WidgetWrapperProps {
   widget: AnyWidget;
@@ -221,6 +222,8 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = ({ widget, data, columnConfi
         return <TitleRenderer widget={widget as TitleWidget} />;
       case 'text':
         return <div className="overflow-y-auto h-full"><MarkdownRenderer content={(widget as TextWidget).config.content} /></div>;
+      case 'ai':
+        return <AIInsightWidgetComponent widget={widget as AIInsightWidget} />;
       default:
         return null;
     }
