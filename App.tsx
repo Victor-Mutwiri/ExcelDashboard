@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { AppState, ColumnConfig, RowData, ParsedFile, SavedDashboard, AnyWidget, ChartWidgetConfig, KpiWidgetConfig, WidgetSize, ChartWidget, TitleWidgetConfig } from './types';
+import { AppState, ColumnConfig, RowData, ParsedFile, SavedDashboard, AnyWidget, ChartWidgetConfig, KpiWidgetConfig, WidgetSize, TextWidgetConfig, TitleWidgetConfig } from './types';
 import FileUpload from './components/FileUpload';
 import DataConfiguration from './components/DataConfiguration';
 import DashboardCanvas from './components/DashboardCanvas';
@@ -9,11 +9,12 @@ import LoadDashboardModal from './components/LoadDashboardModal';
 import SaveDashboardModal from './components/SaveDashboardModal';
 import KpiModal from './components/KpiModal';
 import TitleModal from './components/TitleModal';
+import TextModal from './components/TextModal';
 import Toast from './components/Toast';
 import LandingPage from './components/LandingPage';
 import ManageHiddenWidgetsModal from './components/ManageHiddenWidgetsModal';
 import { parseFile, processData } from './utils/fileParser';
-import { ChartIcon, PlusIcon, ResetIcon, SaveIcon, FolderOpenIcon, KpiIcon, TableIcon, ExportIcon, PaintBrushIcon, EyeIcon, CloseIcon, TitleIcon, BackIcon, CalculatorIcon } from './components/Icons';
+import { ChartIcon, PlusIcon, ResetIcon, SaveIcon, FolderOpenIcon, KpiIcon, TableIcon, ExportIcon, PaintBrushIcon, EyeIcon, CloseIcon, TitleIcon, BackIcon, CalculatorIcon, TextIcon } from './components/Icons';
 import { themes, ThemeName } from './themes';
 import { isPotentiallyNumeric } from './utils/dataCleaner';
 
@@ -35,6 +36,7 @@ export default function App() {
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [isKpiModalOpen, setIsKpiModalOpen] = useState(false);
   const [isTitleModalOpen, setIsTitleModalOpen] = useState(false);
+  const [isTextModalOpen, setIsTextModalOpen] = useState(false);
   const [isManageHiddenOpen, setIsManageHiddenOpen] = useState(false);
   const [editingWidgetId, setEditingWidgetId] = useState<string | null>(null);
 
@@ -255,6 +257,22 @@ export default function App() {
     setEditingWidgetId(null);
   };
   
+  const handleSaveText = (config: TextWidgetConfig) => {
+    if (editingWidgetId) {
+      setWidgets(prev => prev.map(w => (w.id === editingWidgetId && w.type === 'text' ? { ...w, config } : w)));
+    } else {
+      const newTextWidget: AnyWidget = {
+        id: `text-${Date.now()}`,
+        type: 'text',
+        size: '1/2',
+        config
+      };
+      setWidgets(prev => [...prev, newTextWidget]);
+    }
+    setIsTextModalOpen(false);
+    setEditingWidgetId(null);
+  };
+
   const handleAddKpi = (config: KpiWidgetConfig) => {
     const newKpiWidget: AnyWidget = {
         id: `kpi-${Date.now()}`,
@@ -280,6 +298,10 @@ export default function App() {
       setEditingWidgetId(id);
       setIsTitleModalOpen(true);
     }
+    if (widget?.type === 'text') {
+      setEditingWidgetId(id);
+      setIsTextModalOpen(true);
+    }
   };
 
   const handleToggleWidgetVisibility = (id: string) => {
@@ -290,10 +312,11 @@ export default function App() {
     setWidgets(prev => prev.map(w => w.id === id ? { ...w, size } : w));
   };
 
-  const handleAddWidget = (type: 'chart' | 'kpi' | 'datatable' | 'title' | 'calc') => {
+  const handleAddWidget = (type: 'chart' | 'kpi' | 'datatable' | 'title' | 'calc' | 'text') => {
     setAddWidgetMenuOpen(false);
     if (type === 'chart') setIsChartModalOpen(true);
     if (type === 'kpi') setIsKpiModalOpen(true);
+    if (type === 'text') setIsTextModalOpen(true);
     if (type === 'calc') setIsCalcModalOpen(true);
     if (type === 'title') {
       const existingTitle = widgets.find(w => w.type === 'title');
@@ -423,6 +446,7 @@ export default function App() {
                             <button data-tooltip="Add a customizable main title for your report." onClick={() => handleAddWidget('title')} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)]"><TitleIcon /> Report Title</button>
                             <button data-tooltip="Display a key performance indicator with a single, prominent value." onClick={() => handleAddWidget('kpi')} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)]"><KpiIcon /> KPI Card</button>
                             <button data-tooltip="Visualize your data with bar, line, area, or pie charts." onClick={() => handleAddWidget('chart')} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)]"><ChartIcon /> Chart</button>
+                            <button data-tooltip="Add a rich text block for comments, analysis, or notes." onClick={() => handleAddWidget('text')} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)]"><TextIcon /> Text Block</button>
                             <button data-tooltip="Add a searchable, sortable table of your raw data." onClick={() => handleAddWidget('datatable')} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)]"><TableIcon /> Data Table</button>
                             <div className="border-t border-[var(--border-color)] my-1"></div>
                             <button data-tooltip="Create a new column by performing calculations on existing numeric columns." onClick={() => handleAddWidget('calc')} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)]"><CalculatorIcon /> Calculated Column</button>
@@ -479,6 +503,16 @@ export default function App() {
           }}
           onSave={handleSaveTitle}
           initialConfig={widgetToEdit?.type === 'title' ? widgetToEdit.config : undefined}
+        />
+
+        <TextModal
+          isOpen={isTextModalOpen}
+          onClose={() => {
+            setIsTextModalOpen(false);
+            setEditingWidgetId(null);
+          }}
+          onSave={handleSaveText}
+          initialConfig={widgetToEdit?.type === 'text' ? widgetToEdit.config : undefined}
         />
 
         <CalculatedColumnModal 

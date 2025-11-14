@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { ResponsiveContainer, BarChart, Bar, LineChart, Line, PieChart, Pie, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell, ReferenceLine, TooltipProps, LabelList } from 'recharts';
-import { AnyWidget, RowData, ColumnConfig, WidgetSize, ChartWidget, KpiWidget, TitleWidget, DataTableWidget } from '../types';
+import { AnyWidget, RowData, ColumnConfig, WidgetSize, ChartWidget, KpiWidget, TitleWidget, DataTableWidget, TextWidget } from '../types';
 import { DragHandleIcon, EllipsisVerticalIcon, TrashIcon, EyeOffIcon, PencilIcon } from './Icons';
 import DataTable from './DataTable';
 import KpiWidgetComponent from './KpiWidget';
+import MarkdownRenderer from './MarkdownRenderer';
 import { professionalFonts } from './TitleModal';
 
 interface WidgetWrapperProps {
@@ -218,12 +219,19 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = ({ widget, data, columnConfi
         return <KpiWidgetComponent widget={widget as KpiWidget} data={data} columnConfig={columnConfig} />;
       case 'title':
         return <TitleRenderer widget={widget as TitleWidget} />;
+      case 'text':
+        return <div className="overflow-y-auto h-full"><MarkdownRenderer content={(widget as TextWidget).config.content} /></div>;
       default:
         return null;
     }
   };
-
-  const title = widget.type === 'datatable' ? widget.title : widget.config.title;
+  
+  const getTitle = (w: AnyWidget): string => {
+    if (w.type === 'datatable') return w.title;
+    if (w.type === 'title') return "Report Title";
+    return w.config.title;
+  }
+  const title = getTitle(widget);
 
   return (
     <div
@@ -244,7 +252,7 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = ({ widget, data, columnConfi
             )}
           </div>
           <div className="flex-grow text-center px-2">
-            <h3 className="font-bold truncate" title={title}>{widget.type === 'title' ? "Report Title" : title}</h3>
+            <h3 className="font-bold truncate" title={title}>{title}</h3>
           </div>
           <div className="w-8 relative noprint flex-shrink-0 flex justify-end">
             <button onClick={() => setIsMenuOpen(prev => !prev)} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)]" data-tooltip="Widget options">
@@ -263,7 +271,7 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = ({ widget, data, columnConfi
                   </div>
                 )}
                 <div className="border-t border-[var(--border-color)] p-1">
-                  {(widget.type === 'chart' || widget.type === 'title') && (
+                  {(widget.type === 'chart' || widget.type === 'title' || widget.type === 'text') && (
                     <button onClick={() => { onEdit(); setIsMenuOpen(false); }} className="w-full text-left flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-[var(--bg-contrast-hover)] rounded-md" data-tooltip="Edit this widget's configuration.">
                       <PencilIcon /> Edit
                     </button>

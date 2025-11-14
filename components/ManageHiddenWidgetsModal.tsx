@@ -10,10 +10,12 @@ interface ManageHiddenWidgetsModalProps {
   onToggleVisibility: (id: string) => void;
 }
 
-const getWidgetTitle = (widget: AnyWidget) => {
+const getWidgetTitle = (widget: AnyWidget): string => {
     if (widget.type === 'datatable') return widget.title;
-    // FIX: TitleWidget uses `config.text` for its content, not `config.title`.
-    if (widget.type === 'title') return widget.config.text;
+    if (widget.type === 'title') {
+      const text = widget.config.text;
+      return text.substring(0, 30) + (text.length > 30 ? '...' : '');
+    }
     return widget.config.title;
 }
 
