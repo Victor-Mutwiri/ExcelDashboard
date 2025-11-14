@@ -236,6 +236,8 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = ({ widget, data, columnConfi
   }
   const title = getTitle(widget);
 
+  const canEdit = ['chart', 'title', 'text', 'datatable', 'ai'].includes(widget.type);
+
   return (
     <div
       className={`${sizeClasses[widget.size]} transition-opacity duration-300 ${isDragging ? 'opacity-50' : 'opacity-100'} widget-card`}
@@ -274,7 +276,7 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = ({ widget, data, columnConfi
                   </div>
                 )}
                 <div className="border-t border-[var(--border-color)] p-1">
-                  {(widget.type === 'chart' || widget.type === 'title' || widget.type === 'text') && (
+                  {canEdit && (
                     <button onClick={() => { onEdit(); setIsMenuOpen(false); }} className="w-full text-left flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-[var(--bg-contrast-hover)] rounded-md" data-tooltip="Edit this widget's configuration.">
                       <PencilIcon /> Edit
                     </button>

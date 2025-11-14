@@ -1,5 +1,8 @@
+
+
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { AppState, ColumnConfig, RowData, ParsedFile, SavedDashboard, AnyWidget, ChartWidgetConfig, KpiWidgetConfig, WidgetSize, TextWidgetConfig, TitleWidgetConfig, AIServiceConfig, AIInsightWidget, StructuredInsight } from './types';
+// FIX: Imported 'StructuredInsight' to resolve a 'Cannot find name' error when parsing AI responses.
+import { AppState, ColumnConfig, RowData, ParsedFile, SavedDashboard, AnyWidget, ChartWidgetConfig, KpiWidgetConfig, WidgetSize, TextWidgetConfig, TitleWidgetConfig, AIServiceConfig, AIInsightWidget, DataTableWidget, StructuredInsight } from './types';
 import FileUpload from './components/FileUpload';
 import DataConfiguration from './components/DataConfiguration';
 import DashboardCanvas from './components/DashboardCanvas';
@@ -15,9 +18,10 @@ import AIInsightModal from './components/AIInsightModal';
 import Toast from './components/Toast';
 import LandingPage from './components/LandingPage';
 import ManageHiddenWidgetsModal from './components/ManageHiddenWidgetsModal';
+import TitleEditModal from './components/TitleEditModal';
 import { parseFile, processData } from './utils/fileParser';
 import { generateInsight } from './utils/ai';
-import { ChartIcon, PlusIcon, ResetIcon, SaveIcon, FolderOpenIcon, KpiIcon, TableIcon, ExportIcon, PaintBrushIcon, EyeIcon, CloseIcon, TitleIcon, BackIcon, CalculatorIcon, TextIcon, SparklesIcon } from './components/Icons';
+import { ChartIcon, PlusIcon, ResetIcon, SaveIcon, FolderOpenIcon, KpiIcon, TableIcon, ExportIcon, PaintBrushIcon, EyeIcon, CloseIcon, TitleIcon, BackIcon, CalculatorIcon, TextIcon, SparklesIcon, SettingsIcon } from './components/Icons';
 import { themes, ThemeName } from './themes';
 import { isPotentiallyNumeric } from './utils/dataCleaner';
 
@@ -43,6 +47,7 @@ export default function App() {
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [isManageHiddenOpen, setIsManageHiddenOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isTitleEditModalOpen, setIsTitleEditModalOpen] = useState(false);
   const [editingWidgetId, setEditingWidgetId] = useState<string | null>(null);
 
   const [isAddWidgetMenuOpen, setAddWidgetMenuOpen] = useState(false);
@@ -361,18 +366,41 @@ export default function App() {
 
   const handleEditWidget = (id: string) => {
     const widget = widgets.find(w => w.id === id);
-    if (widget?.type === 'chart') {
-      setEditingWidgetId(id);
-      setIsChartModalOpen(true);
+    if (!widget) return;
+
+    setEditingWidgetId(id);
+    switch (widget.type) {
+        case 'chart':
+            setIsChartModalOpen(true);
+            break;
+        case 'title':
+            setIsTitleModalOpen(true);
+            break;
+        case 'text':
+            setIsTextModalOpen(true);
+            break;
+        case 'datatable':
+        case 'ai':
+            setIsTitleEditModalOpen(true);
+            break;
     }
-    if (widget?.type === 'title') {
-      setEditingWidgetId(id);
-      setIsTitleModalOpen(true);
-    }
-    if (widget?.type === 'text') {
-      setEditingWidgetId(id);
-      setIsTextModalOpen(true);
-    }
+  };
+
+  const handleSaveWidgetTitle = (newTitle: string) => {
+    if (!editingWidgetId) return;
+    setWidgets(prev => prev.map(w => {
+        if (w.id === editingWidgetId) {
+            if (w.type === 'datatable') {
+                return { ...w, title: newTitle };
+            }
+            if (w.type === 'ai') {
+                return { ...w, config: { ...w.config, title: newTitle } };
+            }
+        }
+        return w;
+    }));
+    setIsTitleEditModalOpen(false);
+    setEditingWidgetId(null);
   };
 
   const handleToggleWidgetVisibility = (id: string) => {
@@ -422,6 +450,17 @@ export default function App() {
     editingWidgetId ? widgets.find(w => w.id === editingWidgetId) : undefined,
     [editingWidgetId, widgets]
   );
+  
+  const getWidgetTitleForEdit = (widget?: AnyWidget): string => {
+    if (!widget) return '';
+    if (widget.type === 'datatable') {
+        return widget.title;
+    }
+    if (widget.type === 'ai') {
+        return widget.config.title;
+    }
+    return '';
+  };
 
   if (showLandingPage) {
     return <LandingPage onGetStarted={() => setShowLandingPage(false)} />;
@@ -484,8 +523,8 @@ export default function App() {
                 <button data-tooltip="Save your current dashboard layout, widgets, and data." onClick={() => setIsSaveModalOpen(true)} className="px-4 py-2 text-sm font-semibold text-[var(--text-on-accent)] bg-[var(--bg-accent)] hover:bg-[var(--bg-accent-hover)] rounded-lg flex items-center gap-2">
                   <SaveIcon /> Save
                 </button>
-                <button data-tooltip="Configure AI provider settings for upcoming features." onClick={() => setIsSettingsModalOpen(true)} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2">
-                    <SparklesIcon /> AI Settings
+                <button data-tooltip="Configure dashboard settings, including AI providers." onClick={() => setIsSettingsModalOpen(true)} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2">
+                    <SettingsIcon /> Settings
                 </button>
                  <div className="relative">
                     <button data-tooltip="Change the visual theme of your dashboard." onClick={() => setThemeMenuOpen(prev => !prev)} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2">
@@ -635,6 +674,16 @@ export default function App() {
           onClose={() => setIsSettingsModalOpen(false)}
           onSave={handleSaveAiSettings}
           initialConfigs={aiSettings}
+        />
+
+        <TitleEditModal
+          isOpen={isTitleEditModalOpen}
+          onClose={() => {
+            setIsTitleEditModalOpen(false);
+            setEditingWidgetId(null);
+          }}
+          onSave={handleSaveWidgetTitle}
+          initialTitle={getWidgetTitleForEdit(widgetToEdit)}
         />
 
         <ManageHiddenWidgetsModal
