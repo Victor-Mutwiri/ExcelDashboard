@@ -226,7 +226,7 @@ const ChartModal: React.FC<ChartModalProps> = ({ isOpen, onClose, data, columnCo
         color: 'var(--text-primary)'
     };
 
-    const dataLabelFormatter = (value: number) => value.toLocaleString(undefined, { maximumFractionDigits: 0 });
+    const dataLabelFormatter = (value: number) => value.toLocaleString(undefined, { maximumFractionDigits: 3 });
 
     const yAxisDomain = [
       (dataMin: number) => Math.floor(Math.min(0, dataMin) * 1.1),

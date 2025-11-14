@@ -1,7 +1,8 @@
 
+
 import React, { useState, useMemo, useEffect } from 'react';
 import type { ColumnConfig, ParsedFile, RowData } from '../types';
-import { TableIcon, ResetIcon, CheckIcon, CloseIcon } from './Icons';
+import { TableIcon, BackIcon, CheckIcon, CloseIcon } from './Icons';
 import { evaluateFormula } from '../utils/formulaEvaluator';
 
 interface DataConfigurationProps {
@@ -226,7 +227,7 @@ const DataConfiguration: React.FC<DataConfigurationProps> = ({
                     <tr key={rowIndex} className="border-b border-[var(--border-color)]">
                         {config.map(c => {
                             const value = row[c.id];
-                            const displayValue = typeof value === 'number' ? value.toLocaleString(undefined, {maximumFractionDigits: 2}) : String(value ?? '');
+                            const displayValue = typeof value === 'number' ? value.toLocaleString(undefined, {maximumFractionDigits: 3}) : String(value ?? '');
                             return <td key={c.id} className="p-2 truncate max-w-[150px]">{displayValue}</td>
                         })}
                     </tr>
@@ -237,7 +238,7 @@ const DataConfiguration: React.FC<DataConfigurationProps> = ({
 
           <div className="flex justify-between items-center mt-4">
               <button onClick={onReset} className="flex items-center gap-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
-              <ResetIcon /> Back
+              <BackIcon /> Back
               </button>
               <button onClick={() => onConfirm(config)} className="flex items-center gap-2 bg-[var(--bg-accent)] hover:bg-[var(--bg-accent-hover)] text-[var(--text-on-accent)] font-bold py-2 px-6 rounded-lg transition-colors">
               <CheckIcon /> Confirm & Build Dashboard

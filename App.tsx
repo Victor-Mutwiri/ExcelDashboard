@@ -13,7 +13,7 @@ import Toast from './components/Toast';
 import LandingPage from './components/LandingPage';
 import ManageHiddenWidgetsModal from './components/ManageHiddenWidgetsModal';
 import { parseFile, processData } from './utils/fileParser';
-import { ChartIcon, PlusIcon, ResetIcon, SaveIcon, FolderOpenIcon, KpiIcon, TableIcon, ExportIcon, PaintBrushIcon, EyeIcon, CloseIcon, TitleIcon } from './components/Icons';
+import { ChartIcon, PlusIcon, ResetIcon, SaveIcon, FolderOpenIcon, KpiIcon, TableIcon, ExportIcon, PaintBrushIcon, EyeIcon, CloseIcon, TitleIcon, BackIcon, CalculatorIcon } from './components/Icons';
 import { themes, ThemeName } from './themes';
 import { isPotentiallyNumeric } from './utils/dataCleaner';
 
@@ -132,11 +132,13 @@ export default function App() {
     setColumnConfig(finalConfig);
     const processedData = processData(parsedFile.sheets[selectedSheet], finalConfig);
     setData(processedData);
-    setWidgets([
-        { id: `datatable-${Date.now()}`, type: 'datatable', size: 'full', title: fileName }
-    ]);
+    if(appState !== 'DASHBOARD') {
+        setWidgets([
+            { id: `datatable-${Date.now()}`, type: 'datatable', size: 'full', title: fileName }
+        ]);
+    }
     setAppState('DASHBOARD');
-  }, [parsedFile, selectedSheet, fileName]);
+  }, [parsedFile, selectedSheet, fileName, appState]);
   
   const handleSheetSelected = useCallback((sheetName: string) => {
     if (!parsedFile) return;
@@ -163,8 +165,8 @@ export default function App() {
     setColumnConfig(newConfig);
 
     // Re-process data if we are already in the dashboard view
-    if (appState === 'DASHBOARD') {
-      const processedData = processData(parsedFile!.sheets[selectedSheet], newConfig);
+    if (appState === 'DASHBOARD' && parsedFile && selectedSheet) {
+      const processedData = processData(parsedFile.sheets[selectedSheet], newConfig);
       setData(processedData);
     }
     
@@ -288,10 +290,11 @@ export default function App() {
     setWidgets(prev => prev.map(w => w.id === id ? { ...w, size } : w));
   };
 
-  const handleAddWidget = (type: 'chart' | 'kpi' | 'datatable' | 'title') => {
+  const handleAddWidget = (type: 'chart' | 'kpi' | 'datatable' | 'title' | 'calc') => {
     setAddWidgetMenuOpen(false);
     if (type === 'chart') setIsChartModalOpen(true);
     if (type === 'kpi') setIsKpiModalOpen(true);
+    if (type === 'calc') setIsCalcModalOpen(true);
     if (type === 'title') {
       const existingTitle = widgets.find(w => w.type === 'title');
       if (existingTitle) {
@@ -374,6 +377,9 @@ export default function App() {
                     <EyeIcon /> Hidden <span className="bg-[var(--bg-accent)] text-[var(--text-on-accent)] text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">{hiddenWidgets.length}</span>
                   </button>
                 )}
+                 <button onClick={() => setAppState('CONFIGURE')} disabled={!parsedFile || !selectedSheet || !parsedFile.sheets[selectedSheet] || parsedFile.sheets[selectedSheet].length < 2} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                  <BackIcon /> Back to Config
+                </button>
                 <button onClick={handleReset} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2">
                   <ResetIcon /> Start Over
                 </button>
@@ -410,14 +416,16 @@ export default function App() {
                 </div>
                 <div className="relative">
                     <button onClick={() => setAddWidgetMenuOpen(prev => !prev)} className="px-4 py-2 text-sm font-semibold text-white bg-green-600 hover:bg-green-500 rounded-lg flex items-center gap-2">
-                        <PlusIcon /> Add Widget
+                        <PlusIcon /> Add
                     </button>
                     {isAddWidgetMenuOpen && (
-                        <div className="absolute top-full right-0 mt-2 w-48 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg shadow-xl z-20">
+                        <div className="absolute top-full right-0 mt-2 w-56 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg shadow-xl z-20">
                             <button onClick={() => handleAddWidget('title')} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)]"><TitleIcon /> Report Title</button>
                             <button onClick={() => handleAddWidget('kpi')} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)]"><KpiIcon /> KPI Card</button>
                             <button onClick={() => handleAddWidget('chart')} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)]"><ChartIcon /> Chart</button>
                             <button onClick={() => handleAddWidget('datatable')} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)]"><TableIcon /> Data Table</button>
+                            <div className="border-t border-[var(--border-color)] my-1"></div>
+                            <button onClick={() => handleAddWidget('calc')} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)]"><CalculatorIcon /> Calculated Column</button>
                         </div>
                     )}
                 </div>

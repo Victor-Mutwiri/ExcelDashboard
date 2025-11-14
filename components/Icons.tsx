@@ -12,9 +12,15 @@ export const TableIcon: React.FC<React.SVGProps<SVGSVGElement>> = ({ className, 
   </svg>
 );
 
-export const ResetIcon: React.FC<React.SVGProps<SVGSVGElement>> = ({ className, ...props }) => (
+export const BackIcon: React.FC<React.SVGProps<SVGSVGElement>> = ({ className, ...props }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${className || ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12" />
+    </svg>
+);
+
+export const ResetIcon: React.FC<React.SVGProps<SVGSVGElement>> = ({ className, ...props }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${className || ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0011.667 0l3.181-3.183m-4.991-2.691L7.985 5.964m0 0a8.25 8.25 0 0111.667 0l3.181 3.183" />
     </svg>
 );
 

@@ -16,7 +16,7 @@ const KpiWidgetComponent: React.FC<KpiWidgetComponentProps> = ({ widget, data, c
   }, [data, config, columnConfig]);
 
   const displayValue = computedValue !== null 
-    ? computedValue.toLocaleString(undefined, { maximumFractionDigits: 2 }) 
+    ? computedValue.toLocaleString(undefined, { maximumFractionDigits: 3 }) 
     : 'N/A';
 
   return (

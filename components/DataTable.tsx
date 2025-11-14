@@ -1,4 +1,5 @@
 
+
 import React, { useMemo, useState, useEffect } from 'react';
 import {
   useReactTable,
@@ -56,6 +57,13 @@ const DataTable: React.FC<DataTableProps> = ({ data, columnsConfig, title }) => 
     columnsConfig.map(config => ({
       accessorKey: config.label,
       header: config.label,
+      cell: ({ getValue }) => {
+        const value = getValue();
+        if (typeof value === 'number') {
+          return value.toLocaleString(undefined, { maximumFractionDigits: 3 });
+        }
+        return String(value ?? '');
+      }
     })),
     [columnsConfig]
   );

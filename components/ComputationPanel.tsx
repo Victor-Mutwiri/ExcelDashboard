@@ -97,7 +97,7 @@ const ComputationPanel: React.FC<ComputationPanelProps> = ({ data, columnConfig 
             {results.map((res, i) => (
               <div key={i} className="p-3 bg-gray-800 rounded-lg">
                 <p className="text-sm text-gray-400">{res.computation} of "{res.column}"</p>
-                <p className="text-xl font-bold text-indigo-400">{res.value.toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
+                <p className="text-xl font-bold text-indigo-400">{res.value.toLocaleString(undefined, { maximumFractionDigits: 3 })}</p>
               </div>
             ))}
           </div>

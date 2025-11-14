@@ -182,7 +182,7 @@ const CalculatedColumnModal: React.FC<CalculatedColumnModalProps> = ({
                                 </div>
                                 <div>
                                     <p className="font-semibold text-[var(--text-secondary)]">Result:</p>
-                                    <p className="text-2xl font-bold text-green-400">{typeof livePreview.result === 'number' ? livePreview.result.toLocaleString(undefined, { maximumFractionDigits: 4 }) : 'Error'}</p>
+                                    <p className="text-2xl font-bold text-green-400">{typeof livePreview.result === 'number' ? livePreview.result.toLocaleString(undefined, { maximumFractionDigits: 3 }) : 'Error'}</p>
                                 </div>
                             </>
                         )}

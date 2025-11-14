@@ -36,7 +36,7 @@ const CustomTooltip: React.FC<TooltipProps<number, string>> = ({ active, payload
           <p className="label font-bold mb-2">{`${label}`}</p>
           {payload.map((pld) => (
             <p key={pld.name} style={{ color: pld.color }} className="text-sm">
-              {`${pld.name}: ${pld.value?.toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
+              {`${pld.name}: ${pld.value?.toLocaleString(undefined, { maximumFractionDigits: 3 })}`}
             </p>
           ))}
         </div>
@@ -114,7 +114,7 @@ const ChartRenderer: React.FC<{ widget: ChartWidget; data: RowData[]; chartColor
   const lineSeriesKeys = yAxisKeys.filter(k => seriesType[k] === 'line');
 
   const ChartComponent = { bar: BarChart, line: LineChart, area: AreaChart, pie: PieChart }[effectiveChartType];
-  const dataLabelFormatter = (value: number) => value.toLocaleString(undefined, { maximumFractionDigits: 0 });
+  const dataLabelFormatter = (value: number) => value.toLocaleString(undefined, { maximumFractionDigits: 3 });
   const yAxisDomain = [
     (dataMin: number) => Math.floor(Math.min(0, dataMin) * 1.1),
     (dataMax: number) => Math.ceil(Math.max(0, dataMax) * 1.1)

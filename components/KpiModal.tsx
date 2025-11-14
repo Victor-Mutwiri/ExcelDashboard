@@ -146,7 +146,7 @@ const KpiModal: React.FC<KpiModalProps> = ({ isOpen, onClose, data, numericColum
                             ) : (
                                 <div>
                                     <p className="font-semibold text-[var(--text-secondary)]">Final Value:</p>
-                                    <p className="text-3xl font-bold text-green-400">{typeof livePreview.result === 'number' ? livePreview.result.toLocaleString(undefined, { maximumFractionDigits: 4 }) : 'N/A'}</p>
+                                    <p className="text-3xl font-bold text-green-400">{typeof livePreview.result === 'number' ? livePreview.result.toLocaleString(undefined, { maximumFractionDigits: 3 }) : 'N/A'}</p>
                                 </div>
                             )}
                         </div>
