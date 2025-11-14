@@ -1,6 +1,7 @@
 import * as XLSX from 'xlsx';
 import type { ColumnConfig, RowData, ParsedFile } from '../types';
 import { evaluateFormula } from './formulaEvaluator';
+import { parseNumericValue } from './dataCleaner';
 
 export const parseFile = (file: File): Promise<ParsedFile> => {
   return new Promise((resolve, reject) => {
@@ -40,8 +41,7 @@ export const processData = (rawData: any[][], finalConfig: ColumnConfig[]): RowD
       const originalColumnIndex = parseInt(config.id.split('_')[1]);
       let value = row[originalColumnIndex];
       if (config.isNumeric) {
-        value = value !== null ? parseFloat(value) : null;
-        if (isNaN(value as number)) value = null;
+        value = parseNumericValue(value);
       }
       rowData[config.label] = value;
     });

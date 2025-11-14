@@ -15,6 +15,7 @@ import ManageHiddenWidgetsModal from './components/ManageHiddenWidgetsModal';
 import { parseFile, processData } from './utils/fileParser';
 import { ChartIcon, PlusIcon, ResetIcon, SaveIcon, FolderOpenIcon, KpiIcon, TableIcon, ExportIcon, PaintBrushIcon, EyeIcon, CloseIcon, TitleIcon } from './components/Icons';
 import { themes, ThemeName } from './themes';
+import { isPotentiallyNumeric } from './utils/dataCleaner';
 
 
 export default function App() {
@@ -86,7 +87,7 @@ export default function App() {
         const initialConfig: ColumnConfig[] = headers.map((h, i) => ({
           id: `col_${i}`,
           label: String(h || `Column ${i + 1}`),
-          isNumeric: sheetData.slice(1).every(row => !isNaN(parseFloat(row[i]))),
+          isNumeric: sheetData.slice(1).every(row => row[i] === null || row[i] === '' || isPotentiallyNumeric(row[i])),
         }));
         setColumnConfig(initialConfig);
       }
@@ -114,8 +115,8 @@ export default function App() {
       const initialConfig: ColumnConfig[] = headers.map((h, i) => ({
         id: `col_${i}`,
         label: String(h || `Column ${i + 1}`),
-        // Check if all subsequent rows in this column are numeric
-        isNumeric: rows.slice(1).every(row => row[i] === null || row[i] === '' || !isNaN(parseFloat(row[i]))),
+        // Check if all subsequent rows in this column are numeric after sanitizing
+        isNumeric: rows.slice(1).every(row => row[i] === null || row[i] === '' || isPotentiallyNumeric(row[i])),
       }));
       setColumnConfig(initialConfig);
       setAppState('CONFIGURE');
@@ -145,7 +146,7 @@ export default function App() {
     const initialConfig: ColumnConfig[] = headers.map((h, i) => ({
       id: `col_${i}`,
       label: String(h || `Column ${i + 1}`),
-      isNumeric: sheetData.slice(1).every(row => row[i] === null || !isNaN(parseFloat(row[i]))),
+      isNumeric: sheetData.slice(1).every(row => row[i] === null || row[i] === '' || isPotentiallyNumeric(row[i])),
     }));
     setColumnConfig(initialConfig);
   }, [parsedFile]);

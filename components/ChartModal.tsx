@@ -194,6 +194,19 @@ const ChartModal: React.FC<ChartModalProps> = ({ isOpen, onClose, data, columnCo
         <p className="text-lg">Please select data for the axes to build your chart.</p>
       </div>
     );
+    
+    const isPieWithNegativeValues = chartType === 'pie' && aggregatedData.some(d => (d[yAxisKeys[0]] as number) < 0);
+
+    if (isPieWithNegativeValues) {
+        return (
+            <div className="flex flex-col items-center justify-center h-full text-[var(--text-tertiary)] gap-4 text-center p-4">
+                <span className="text-5xl" role="img" aria-label="Warning">⚠️</span>
+                <h3 className="font-semibold text-xl text-[var(--text-primary)]">Invalid Data for Pie Chart</h3>
+                <p>Pie charts represent parts of a whole and cannot display negative values.</p>
+                <p className="text-sm mt-2">Consider using a Bar Chart for this data or applying a filter to exclude negative results.</p>
+            </div>
+        );
+    }
 
     const effectiveChartType = yAxisKeys.some(k => seriesType[k] === 'line') ? 'bar' : chartType;
 

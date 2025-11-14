@@ -115,6 +115,10 @@
     --color-accent-secondary: #0369a1;
   }
 
+  .print-title {
+    display: none;
+  }
+
   body {
     background-color: var(--bg-main);
     color: var(--text-primary);
@@ -130,8 +134,29 @@
     }
     .widget-card {
       page-break-inside: avoid;
-      border: 1px solid var(--border-color);
-      box-shadow: none;
+      border: none !important;
+      box-shadow: none !important;
+      padding-bottom: 2rem;
+    }
+    .widget-card > div {
+        background-color: transparent !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        ring-width: 0 !important;
+        border: none !important;
+    }
+    .widget-card header {
+        display: none !important;
+    }
+    .print-title {
+      display: block !important;
+      text-align: center;
+      font-size: 1.25rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+    }
+    .widget-card main {
+        padding: 0 !important;
     }
     .widget-card h3, .widget-card p, .widget-card span, .widget-card text, .widget-card tspan {
         color: var(--text-primary) !important;
@@ -180,8 +205,29 @@
     display: none !important;
   }
   .print-preview-mode .widget-card {
-    border: 1px solid #e2e8f0;
-    box-shadow: none;
+    border: none !important;
+    box-shadow: none !important;
+    padding-bottom: 2rem;
+  }
+  .print-preview-mode .widget-card > div {
+    background-color: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    ring-width: 0 !important;
+    border: none !important;
+  }
+  .print-preview-mode .widget-card header {
+    display: none !important;
+  }
+  .print-preview-mode .print-title {
+    display: block !important;
+    text-align: center;
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+  }
+  .print-preview-mode .widget-card main {
+    padding: 0 !important;
   }
   .print-preview-mode .widget-card h3,
   .print-preview-mode .widget-card p,

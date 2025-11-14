@@ -107,6 +107,8 @@ const ChartRenderer: React.FC<{ widget: ChartWidget; data: RowData[]; chartColor
     });
   }, [data, xAxisKey, yAxisKeys, seriesConfig]);
   
+  const isPieWithNegativeValues = chartType === 'pie' && yAxisKeys.length > 0 && aggregatedData.some(d => (d[yAxisKeys[0]] as number) < 0);
+
   const hasLineSeries = yAxisKeys.some(k => seriesType[k] === 'line');
   const effectiveChartType = hasLineSeries ? 'bar' : chartType;
   const lineSeriesKeys = yAxisKeys.filter(k => seriesType[k] === 'line');
@@ -115,65 +117,76 @@ const ChartRenderer: React.FC<{ widget: ChartWidget; data: RowData[]; chartColor
   const dataLabelFormatter = (value: number) => value.toLocaleString(undefined, { maximumFractionDigits: 0 });
 
   return (
-    <ResponsiveContainer width="100%" height={300}>
-      {chartType === 'pie' ? (
-        <PieChart>
-          <Pie data={aggregatedData.map(row => ({ name: String(row[xAxisKey]), value: row[yAxisKeys[0]] as number }))} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label>
-            {aggregatedData.map((_entry, index) => <Cell key={`cell-${index}`} fill={seriesColors[yAxisKeys[0]] || chartColors[index % chartColors.length]} />)}
-          </Pie>
-          <Tooltip content={<CustomTooltip />} />
-          <Legend />
-        </PieChart>
+    <>
+      <h3 className="print-title">{config.title}</h3>
+      {isPieWithNegativeValues ? (
+        <div className="flex flex-col items-center justify-center h-full text-[var(--text-tertiary)] gap-2 text-center p-4">
+            <span className="text-4xl" role="img" aria-label="Warning">⚠️</span>
+            <h4 className="font-semibold text-lg text-[var(--text-primary)]">Display Error</h4>
+            <p className="text-sm">Pie charts cannot be shown with negative values.</p>
+        </div>
       ) : (
-        <ChartComponent data={aggregatedData}>
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
-          <XAxis dataKey={xAxisKey} stroke="var(--text-secondary)" tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} interval={0} angle={-45} textAnchor="end" height={100} />
-          <YAxis yAxisId="left" orientation="left" stroke="var(--text-secondary)" tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} />
-          {hasLineSeries && <YAxis yAxisId="right" orientation="right" stroke={seriesColors[lineSeriesKeys[0]] || '#82ca9d'} tick={{ fill: seriesColors[lineSeriesKeys[0]] || '#82ca9d', fontSize: 12 }} />}
-          <Tooltip content={<CustomTooltip />} />
-          <Legend />
-          {referenceLine && <ReferenceLine yAxisId="left" y={referenceLine.value} label={referenceLine.label} stroke={referenceLine.color} strokeDasharray="3 3" />}
-          {yAxisKeys.map((key, index) => {
-              const type = seriesType[key];
-              const color = seriesColors[key] || chartColors[index % chartColors.length];
-              
-              if (hasLineSeries && type === 'line') {
-                  return <Line key={key} yAxisId="right" type="monotone" dataKey={key} stroke={color} strokeWidth={2}>
-                    {showDataLabels && <LabelList dataKey={key} position="top" fill="var(--text-secondary)" fontSize={12} formatter={dataLabelFormatter} />}
-                  </Line>;
-              }
+        <ResponsiveContainer width="100%" height={300}>
+          {chartType === 'pie' ? (
+            <PieChart>
+              <Pie data={aggregatedData.map(row => ({ name: String(row[xAxisKey]), value: row[yAxisKeys[0]] as number }))} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label>
+                {aggregatedData.map((_entry, index) => <Cell key={`cell-${index}`} fill={seriesColors[yAxisKeys[0]] || chartColors[index % chartColors.length]} />)}
+              </Pie>
+              <Tooltip content={<CustomTooltip />} />
+              <Legend />
+            </PieChart>
+          ) : (
+            <ChartComponent data={aggregatedData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
+              <XAxis dataKey={xAxisKey} stroke="var(--text-secondary)" tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} interval={0} angle={-45} textAnchor="end" height={100} />
+              <YAxis yAxisId="left" orientation="left" stroke="var(--text-secondary)" tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} />
+              {hasLineSeries && <YAxis yAxisId="right" orientation="right" stroke={seriesColors[lineSeriesKeys[0]] || '#82ca9d'} tick={{ fill: seriesColors[lineSeriesKeys[0]] || '#82ca9d', fontSize: 12 }} />}
+              <Tooltip content={<CustomTooltip />} />
+              <Legend />
+              {referenceLine && <ReferenceLine yAxisId="left" y={referenceLine.value} label={referenceLine.label} stroke={referenceLine.color} strokeDasharray="3 3" />}
+              {yAxisKeys.map((key, index) => {
+                  const type = seriesType[key];
+                  const color = seriesColors[key] || chartColors[index % chartColors.length];
+                  
+                  if (hasLineSeries && type === 'line') {
+                      return <Line key={key} yAxisId="right" type="monotone" dataKey={key} stroke={color} strokeWidth={2}>
+                        {showDataLabels && <LabelList dataKey={key} position="top" fill="var(--text-secondary)" fontSize={12} formatter={dataLabelFormatter} />}
+                      </Line>;
+                  }
 
-              const isBar = (hasLineSeries && type === 'bar') || chartType === 'bar';
-              if (isBar) {
-                  return (
-                      <Bar key={key} yAxisId={hasLineSeries ? 'left' : undefined} dataKey={key} fill={color}>
-                          {showDataLabels && <LabelList dataKey={key} position="top" fill="var(--text-secondary)" fontSize={12} formatter={dataLabelFormatter} />}
-                          {valueColors && Object.keys(valueColors).length > 0
-                              ? aggregatedData.map((entry) => {
-                                  const xValue = entry[xAxisKey] as string;
-                                  return <Cell key={`cell-${xValue}`} fill={valueColors[xValue] || color} />;
-                                })
-                              : null
-                          }
-                      </Bar>
-                  );
-              }
+                  const isBar = (hasLineSeries && type === 'bar') || chartType === 'bar';
+                  if (isBar) {
+                      return (
+                          <Bar key={key} yAxisId={hasLineSeries ? 'left' : undefined} dataKey={key} fill={color}>
+                              {showDataLabels && <LabelList dataKey={key} position="top" fill="var(--text-secondary)" fontSize={12} formatter={dataLabelFormatter} />}
+                              {valueColors && Object.keys(valueColors).length > 0
+                                  ? aggregatedData.map((entry) => {
+                                      const xValue = entry[xAxisKey] as string;
+                                      return <Cell key={`cell-${xValue}`} fill={valueColors[xValue] || color} />;
+                                    })
+                                  : null
+                              }
+                          </Bar>
+                      );
+                  }
 
-              if (chartType === 'line') {
-                  return <Line key={key} type="monotone" dataKey={key} stroke={color}>
-                    {showDataLabels && <LabelList dataKey={key} position="top" fill="var(--text-secondary)" fontSize={12} formatter={dataLabelFormatter} />}
-                  </Line>;
-              }
-              if (chartType === 'area') {
-                  return <Area key={key} type="monotone" dataKey={key} stroke={color} fill={color} fillOpacity={0.6} strokeWidth={2}>
-                    {showDataLabels && <LabelList dataKey={key} position="top" fill="var(--text-secondary)" fontSize={12} formatter={dataLabelFormatter} />}
-                  </Area>;
-              }
-              return null;
-          })}
-        </ChartComponent>
+                  if (chartType === 'line') {
+                      return <Line key={key} type="monotone" dataKey={key} stroke={color}>
+                        {showDataLabels && <LabelList dataKey={key} position="top" fill="var(--text-secondary)" fontSize={12} formatter={dataLabelFormatter} />}
+                      </Line>;
+                  }
+                  if (chartType === 'area') {
+                      return <Area key={key} type="monotone" dataKey={key} stroke={color} fill={color} fillOpacity={0.6} strokeWidth={2}>
+                        {showDataLabels && <LabelList dataKey={key} position="top" fill="var(--text-secondary)" fontSize={12} formatter={dataLabelFormatter} />}
+                      </Area>;
+                  }
+                  return null;
+              })}
+            </ChartComponent>
+          )}
+        </ResponsiveContainer>
       )}
-    </ResponsiveContainer>
+    </>
   );
 };
 
