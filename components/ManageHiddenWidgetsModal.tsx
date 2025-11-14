@@ -12,6 +12,8 @@ interface ManageHiddenWidgetsModalProps {
 
 const getWidgetTitle = (widget: AnyWidget) => {
     if (widget.type === 'datatable') return widget.title;
+    // FIX: TitleWidget uses `config.text` for its content, not `config.title`.
+    if (widget.type === 'title') return widget.config.text;
     return widget.config.title;
 }
 

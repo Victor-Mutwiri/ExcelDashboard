@@ -26,7 +26,7 @@ export interface ComputationResult {
 
 // --- WIDGETS ---
 export type WidgetSize = '1/4' | '1/3' | '1/2' | '2/3' | 'full';
-export type WidgetType = 'datatable' | 'chart' | 'kpi';
+export type WidgetType = 'datatable' | 'chart' | 'kpi' | 'title';
 
 export interface BaseWidget {
   id: string;
@@ -74,7 +74,19 @@ export interface DataTableWidget extends BaseWidget {
   title: string;
 }
 
-export type AnyWidget = DataTableWidget | ChartWidget | KpiWidget;
+// Title Widget
+export interface TitleWidgetConfig {
+  text: string;
+  fontFamily: string;
+  fontSize: number; // in pixels
+  textAlign: 'left' | 'center' | 'right';
+}
+export interface TitleWidget extends BaseWidget {
+  type: 'title';
+  config: TitleWidgetConfig;
+}
+
+export type AnyWidget = DataTableWidget | ChartWidget | KpiWidget | TitleWidget;
 // --- END WIDGETS ---
 
 export interface SavedDashboard {

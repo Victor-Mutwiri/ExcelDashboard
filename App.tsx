@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { AppState, ColumnConfig, RowData, ParsedFile, SavedDashboard, AnyWidget, ChartWidgetConfig, KpiWidgetConfig, WidgetSize, ChartWidget } from './types';
+import { AppState, ColumnConfig, RowData, ParsedFile, SavedDashboard, AnyWidget, ChartWidgetConfig, KpiWidgetConfig, WidgetSize, ChartWidget, TitleWidgetConfig } from './types';
 import FileUpload from './components/FileUpload';
 import DataConfiguration from './components/DataConfiguration';
 import DashboardCanvas from './components/DashboardCanvas';
@@ -8,11 +8,12 @@ import CalculatedColumnModal from './components/CalculatedColumnModal';
 import LoadDashboardModal from './components/LoadDashboardModal';
 import SaveDashboardModal from './components/SaveDashboardModal';
 import KpiModal from './components/KpiModal';
+import TitleModal from './components/TitleModal';
 import Toast from './components/Toast';
 import LandingPage from './components/LandingPage';
 import ManageHiddenWidgetsModal from './components/ManageHiddenWidgetsModal';
 import { parseFile, processData } from './utils/fileParser';
-import { ChartIcon, PlusIcon, ResetIcon, SaveIcon, FolderOpenIcon, KpiIcon, TableIcon, ExportIcon, PaintBrushIcon, EyeIcon, CloseIcon } from './components/Icons';
+import { ChartIcon, PlusIcon, ResetIcon, SaveIcon, FolderOpenIcon, KpiIcon, TableIcon, ExportIcon, PaintBrushIcon, EyeIcon, CloseIcon, TitleIcon } from './components/Icons';
 import { themes, ThemeName } from './themes';
 
 
@@ -32,6 +33,7 @@ export default function App() {
   const [isLoadModalOpen, setIsLoadModalOpen] = useState(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [isKpiModalOpen, setIsKpiModalOpen] = useState(false);
+  const [isTitleModalOpen, setIsTitleModalOpen] = useState(false);
   const [isManageHiddenOpen, setIsManageHiddenOpen] = useState(false);
   const [editingWidgetId, setEditingWidgetId] = useState<string | null>(null);
 
@@ -229,6 +231,26 @@ export default function App() {
     setIsChartModalOpen(false);
     setEditingWidgetId(null);
   };
+
+  const handleSaveTitle = (config: TitleWidgetConfig) => {
+    const existingTitle = widgets.find(w => w.type === 'title');
+    
+    if (existingTitle) {
+      // Update existing title
+      setWidgets(prev => prev.map(w => w.id === existingTitle.id ? { ...w, config } : w));
+    } else {
+      // Add new title to the top
+      const newTitleWidget: AnyWidget = {
+          id: `title-${Date.now()}`,
+          type: 'title',
+          size: 'full', // Always full width
+          config,
+      };
+      setWidgets(prev => [newTitleWidget, ...prev.filter(w => w.type !== 'title')]);
+    }
+    setIsTitleModalOpen(false);
+    setEditingWidgetId(null);
+  };
   
   const handleAddKpi = (config: KpiWidgetConfig) => {
     const newKpiWidget: AnyWidget = {
@@ -251,6 +273,10 @@ export default function App() {
       setEditingWidgetId(id);
       setIsChartModalOpen(true);
     }
+    if (widget?.type === 'title') {
+      setEditingWidgetId(id);
+      setIsTitleModalOpen(true);
+    }
   };
 
   const handleToggleWidgetVisibility = (id: string) => {
@@ -261,11 +287,18 @@ export default function App() {
     setWidgets(prev => prev.map(w => w.id === id ? { ...w, size } : w));
   };
 
-  const handleAddWidget = (type: 'chart' | 'kpi' | 'datatable') => {
+  const handleAddWidget = (type: 'chart' | 'kpi' | 'datatable' | 'title') => {
     setAddWidgetMenuOpen(false);
-    if(type === 'chart') setIsChartModalOpen(true);
-    if(type === 'kpi') setIsKpiModalOpen(true);
-    if(type === 'datatable') {
+    if (type === 'chart') setIsChartModalOpen(true);
+    if (type === 'kpi') setIsKpiModalOpen(true);
+    if (type === 'title') {
+      const existingTitle = widgets.find(w => w.type === 'title');
+      if (existingTitle) {
+        setEditingWidgetId(existingTitle.id);
+      }
+      setIsTitleModalOpen(true);
+    }
+    if (type === 'datatable') {
         const newTableWidget: AnyWidget = {
             id: `datatable-${Date.now()}`,
             type: 'datatable',
@@ -380,6 +413,7 @@ export default function App() {
                     </button>
                     {isAddWidgetMenuOpen && (
                         <div className="absolute top-full right-0 mt-2 w-48 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg shadow-xl z-20">
+                            <button onClick={() => handleAddWidget('title')} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)]"><TitleIcon /> Report Title</button>
                             <button onClick={() => handleAddWidget('kpi')} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)]"><KpiIcon /> KPI Card</button>
                             <button onClick={() => handleAddWidget('chart')} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)]"><ChartIcon /> Chart</button>
                             <button onClick={() => handleAddWidget('datatable')} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)]"><TableIcon /> Data Table</button>
@@ -426,6 +460,16 @@ export default function App() {
           onSave={handleSaveChart}
           chartColors={themes[theme].chartColors}
           initialConfig={widgetToEdit?.type === 'chart' ? widgetToEdit.config : undefined}
+        />
+
+        <TitleModal 
+          isOpen={isTitleModalOpen}
+          onClose={() => {
+            setIsTitleModalOpen(false);
+            setEditingWidgetId(null);
+          }}
+          onSave={handleSaveTitle}
+          initialConfig={widgetToEdit?.type === 'title' ? widgetToEdit.config : undefined}
         />
 
         <CalculatedColumnModal 

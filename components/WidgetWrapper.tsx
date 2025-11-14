@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { ResponsiveContainer, BarChart, Bar, LineChart, Line, PieChart, Pie, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell, ReferenceLine, TooltipProps, LabelList } from 'recharts';
-import { AnyWidget, RowData, ColumnConfig, WidgetSize, ChartWidget, KpiWidget } from '../types';
+import { AnyWidget, RowData, ColumnConfig, WidgetSize, ChartWidget, KpiWidget, TitleWidget } from '../types';
 import { DragHandleIcon, EllipsisVerticalIcon, TrashIcon, EyeOffIcon, PencilIcon } from './Icons';
 import DataTable from './DataTable';
 import KpiWidgetComponent from './KpiWidget';
+import { professionalFonts } from './TitleModal';
 
 interface WidgetWrapperProps {
   widget: AnyWidget;
@@ -43,6 +44,29 @@ const CustomTooltip: React.FC<TooltipProps<number, string>> = ({ active, payload
     }
     return null;
 };
+
+const TitleRenderer: React.FC<{ widget: TitleWidget }> = ({ widget }) => {
+  const { config } = widget;
+  const { text, fontFamily, fontSize, textAlign } = config;
+
+  return (
+    <div className="w-full h-full flex items-center" style={{ justifyContent: 'stretch' }}>
+      <h1
+        className="w-full"
+        style={{
+          fontFamily: professionalFonts[fontFamily as keyof typeof professionalFonts],
+          fontSize: `${fontSize}px`,
+          textAlign: textAlign,
+          color: 'var(--text-primary)',
+          wordBreak: 'break-word',
+        }}
+      >
+        {text}
+      </h1>
+    </div>
+  );
+};
+
 
 const ChartRenderer: React.FC<{ widget: ChartWidget; data: RowData[]; chartColors: string[] }> = ({ widget, data, chartColors }) => {
   const { config } = widget;
@@ -165,6 +189,8 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = ({ widget, data, columnConfi
         return <ChartRenderer widget={widget as ChartWidget} data={data} chartColors={chartColors} />;
       case 'kpi':
         return <KpiWidgetComponent widget={widget as KpiWidget} data={data} columnConfig={columnConfig} />;
+      case 'title':
+        return <TitleRenderer widget={widget as TitleWidget} />;
       default:
         return null;
     }
@@ -175,7 +201,7 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = ({ widget, data, columnConfi
   return (
     <div
       className={`${sizeClasses[widget.size]} transition-opacity duration-300 ${isDragging ? 'opacity-50' : 'opacity-100'} widget-card`}
-      draggable
+      draggable={widget.type !== 'title'}
       onDragStart={onDragStart}
       onDragEnter={onDragEnter}
       onDragEnd={onDragEnd}
@@ -184,12 +210,14 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = ({ widget, data, columnConfi
       <div className="bg-[var(--bg-card)] rounded-xl h-full flex flex-col ring-1 ring-black/5 shadow-md">
         <header className="flex items-center p-4 border-b border-[var(--border-color)]">
           <div className="w-8 flex-shrink-0">
-            <div className="cursor-grab" onMouseDown={(e) => e.stopPropagation()}>
-              <DragHandleIcon className="text-[var(--text-tertiary)]" />
-            </div>
+            {widget.type !== 'title' && (
+              <div className="cursor-grab" onMouseDown={(e) => e.stopPropagation()}>
+                <DragHandleIcon className="text-[var(--text-tertiary)]" />
+              </div>
+            )}
           </div>
           <div className="flex-grow text-center px-2">
-            <h3 className="font-bold truncate" title={title}>{title}</h3>
+            <h3 className="font-bold truncate" title={title}>{widget.type === 'title' ? "Report Title" : title}</h3>
           </div>
           <div className="w-8 relative noprint flex-shrink-0 flex justify-end">
             <button onClick={() => setIsMenuOpen(prev => !prev)} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
@@ -197,16 +225,18 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = ({ widget, data, columnConfi
             </button>
             {isMenuOpen && (
               <div className="absolute top-full right-0 mt-2 w-40 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg shadow-xl z-10">
-                <div className="p-1">
-                  <p className="px-3 py-1 text-xs text-[var(--text-secondary)]">Resize</p>
-                  {(['1/4', '1/3', '1/2', '2/3', 'full'] as WidgetSize[]).map(size => (
-                    <button key={size} onClick={() => { onUpdateSize(size); setIsMenuOpen(false); }} className="w-full text-left block px-3 py-1.5 text-sm hover:bg-[var(--bg-contrast-hover)] rounded-md">
-                      {size.replace('/', '-')} Width
-                    </button>
-                  ))}
-                </div>
+                {widget.type !== 'title' && (
+                  <div className="p-1">
+                    <p className="px-3 py-1 text-xs text-[var(--text-secondary)]">Resize</p>
+                    {(['1/4', '1/3', '1/2', '2/3', 'full'] as WidgetSize[]).map(size => (
+                      <button key={size} onClick={() => { onUpdateSize(size); setIsMenuOpen(false); }} className="w-full text-left block px-3 py-1.5 text-sm hover:bg-[var(--bg-contrast-hover)] rounded-md">
+                        {size.replace('/', '-')} Width
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <div className="border-t border-[var(--border-color)] p-1">
-                  {widget.type === 'chart' && (
+                  {(widget.type === 'chart' || widget.type === 'title') && (
                     <button onClick={() => { onEdit(); setIsMenuOpen(false); }} className="w-full text-left flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-[var(--bg-contrast-hover)] rounded-md">
                       <PencilIcon /> Edit
                     </button>
