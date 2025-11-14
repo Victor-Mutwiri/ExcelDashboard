@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { ResponsiveContainer, BarChart, Bar, LineChart, Line, PieChart, Pie, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell, ReferenceLine, TooltipProps, LabelList } from 'recharts';
-import { AnyWidget, RowData, ColumnConfig, WidgetSize, ChartWidget, KpiWidget, TitleWidget } from '../types';
+import { AnyWidget, RowData, ColumnConfig, WidgetSize, ChartWidget, KpiWidget, TitleWidget, DataTableWidget } from '../types';
 import { DragHandleIcon, EllipsisVerticalIcon, TrashIcon, EyeOffIcon, PencilIcon } from './Icons';
 import DataTable from './DataTable';
 import KpiWidgetComponent from './KpiWidget';
@@ -210,7 +210,8 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = ({ widget, data, columnConfi
   const renderContent = () => {
     switch (widget.type) {
       case 'datatable':
-        return <DataTable data={data} columnsConfig={columnConfig} />;
+        const dtWidget = widget as DataTableWidget;
+        return <DataTable data={data} columnsConfig={columnConfig} title={dtWidget.title} />;
       case 'chart':
         return <ChartRenderer widget={widget as ChartWidget} data={data} chartColors={chartColors} />;
       case 'kpi':

@@ -1,5 +1,5 @@
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -10,6 +10,7 @@ import {
   ColumnDef,
   SortingState,
   ColumnFiltersState,
+  PaginationState,
 } from '@tanstack/react-table';
 import type { RowData, ColumnConfig } from '../types';
 import { ChevronUpIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, SearchIcon, EyeOffIcon } from './Icons';
@@ -17,6 +18,7 @@ import { ChevronUpIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, Sear
 interface DataTableProps {
   data: RowData[];
   columnsConfig: ColumnConfig[];
+  title: string;
 }
 
 const DebouncedInput: React.FC<{
@@ -49,7 +51,7 @@ const DebouncedInput: React.FC<{
   );
 }
 
-const DataTable: React.FC<DataTableProps> = ({ data, columnsConfig }) => {
+const DataTable: React.FC<DataTableProps> = ({ data, columnsConfig, title }) => {
   const columns = useMemo<ColumnDef<RowData>[]>(() =>
     columnsConfig.map(config => ({
       accessorKey: config.label,
@@ -62,6 +64,37 @@ const DataTable: React.FC<DataTableProps> = ({ data, columnsConfig }) => {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
   const [columnVisibility, setColumnVisibility] = useState({});
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 10,
+  });
+
+  useEffect(() => {
+    const setPrintPageSize = () => setPagination(p => ({ ...p, pageSize: data.length }));
+    const setDefaultPageSize = () => setPagination(p => ({ ...p, pageSize: 10 }));
+
+    const checkPrintMode = () => {
+      if (document.body.classList.contains('print-preview-mode')) {
+        setPrintPageSize();
+      } else {
+        setDefaultPageSize();
+      }
+    };
+    
+    checkPrintMode();
+
+    const observer = new MutationObserver(checkPrintMode);
+    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
+    window.addEventListener('beforeprint', setPrintPageSize);
+    window.addEventListener('afterprint', setDefaultPageSize);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('beforeprint', setPrintPageSize);
+      window.removeEventListener('afterprint', setDefaultPageSize);
+    };
+  }, [data.length]);
 
   const table = useReactTable({
     data,
@@ -71,11 +104,13 @@ const DataTable: React.FC<DataTableProps> = ({ data, columnsConfig }) => {
       columnFilters,
       globalFilter,
       columnVisibility,
+      pagination,
     },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
     onColumnVisibilityChange: setColumnVisibility,
+    onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -84,7 +119,8 @@ const DataTable: React.FC<DataTableProps> = ({ data, columnsConfig }) => {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex flex-col md:flex-row items-center justify-between mb-4 gap-4">
+      <h3 className="print-title">{title}</h3>
+      <div className="flex flex-col md:flex-row items-center justify-between mb-4 gap-4 noprint">
         <div className="relative w-full md:w-1/3">
           <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
           <DebouncedInput
@@ -117,7 +153,7 @@ const DataTable: React.FC<DataTableProps> = ({ data, columnsConfig }) => {
           </div>
         </div>
       </div>
-      <div className="flex-grow overflow-auto rounded-lg border border-[var(--border-color)]">
+      <div className="flex-grow overflow-auto rounded-lg border border-[var(--border-color)] data-table-scroll-container">
         <table className="w-full text-sm text-left">
           <thead className="text-xs text-[var(--text-secondary)] uppercase bg-[var(--bg-contrast)] sticky top-0">
             {table.getHeaderGroups().map(headerGroup => (
@@ -159,7 +195,7 @@ const DataTable: React.FC<DataTableProps> = ({ data, columnsConfig }) => {
           </tbody>
         </table>
       </div>
-      <div className="flex items-center justify-between pt-4">
+      <div className="flex items-center justify-between pt-4 noprint">
         <span className="text-sm text-[var(--text-secondary)]">
             Page{' '}
             <strong>
