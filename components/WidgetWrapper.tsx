@@ -182,14 +182,16 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = ({ widget, data, columnConfi
       onDragOver={(e) => e.preventDefault()}
     >
       <div className="bg-[var(--bg-card)] rounded-xl h-full flex flex-col ring-1 ring-black/5 shadow-md">
-        <header className="flex items-center justify-between p-4 border-b border-[var(--border-color)]">
-          <div className="flex items-center gap-2">
+        <header className="flex items-center p-4 border-b border-[var(--border-color)]">
+          <div className="w-8 flex-shrink-0">
             <div className="cursor-grab" onMouseDown={(e) => e.stopPropagation()}>
               <DragHandleIcon className="text-[var(--text-tertiary)]" />
             </div>
-            <h3 className="font-bold">{title}</h3>
           </div>
-          <div className="relative noprint">
+          <div className="flex-grow text-center px-2">
+            <h3 className="font-bold truncate" title={title}>{title}</h3>
+          </div>
+          <div className="w-8 relative noprint flex-shrink-0 flex justify-end">
             <button onClick={() => setIsMenuOpen(prev => !prev)} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
               <EllipsisVerticalIcon />
             </button>

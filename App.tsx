@@ -320,7 +320,7 @@ export default function App() {
         );
       case 'DASHBOARD':
         return (
-          <div className="w-full h-full flex flex-col p-4 sm:p-6 lg:p-8 gap-6">
+          <div className="w-full min-h-screen flex flex-col p-4 sm:p-6 lg:p-8 gap-6">
             {isPreviewMode && (
                 <div className="fixed top-0 left-0 right-0 bg-gray-800 text-white p-3 flex justify-center items-center gap-4 z-50">
                     <p className="font-semibold">Print Preview Mode</p>
@@ -406,8 +406,12 @@ export default function App() {
     }
   };
 
+  const rootContainerClasses = appState === 'DASHBOARD'
+    ? "min-h-screen"
+    : "min-h-screen flex items-center justify-center";
+
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className={rootContainerClasses}>
       {renderContent()}
       
       <div className="noprint">
