@@ -445,6 +445,11 @@ export default function App() {
     }, 100);
   };
 
+  const handleGetStarted = () => {
+    handleReset();
+    setShowLandingPage(false);
+  };
+
   const hiddenWidgets = useMemo(() => widgets.filter(w => w.isHidden), [widgets]);
   const widgetToEdit = useMemo(() =>
     editingWidgetId ? widgets.find(w => w.id === editingWidgetId) : undefined,
@@ -463,7 +468,7 @@ export default function App() {
   };
 
   if (showLandingPage) {
-    return <LandingPage onGetStarted={() => setShowLandingPage(false)} />;
+    return <LandingPage onGetStarted={handleGetStarted} />;
   }
 
   const renderContent = () => {
@@ -501,9 +506,15 @@ export default function App() {
                 </div>
             )}
             <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 noprint bg-[var(--bg-header)] theme-corporate:text-white px-4 sm:px-6 lg:px-8 py-4 border-b border-[var(--border-color)] shadow-sm">
-              <div>
-                <h1 className="text-2xl font-bold">{fileName}</h1>
-                <p className="text-[var(--text-secondary)]">Your interactive dashboard is ready.</p>
+              <div className="flex items-center gap-4">
+                <button onClick={() => setShowLandingPage(true)} className="flex items-center gap-2 group" data-tooltip="Back to Home Page">
+                  <TableIcon className="w-8 h-8 text-[var(--color-accent)] transition-transform group-hover:scale-110" />
+                  <span className="text-2xl font-bold text-[var(--text-primary)] transition-colors group-hover:text-[var(--color-accent-secondary)]">DataDash</span>
+                </button>
+                <div className="border-l border-[var(--border-color-heavy)] pl-4">
+                  <h1 className="text-xl font-bold leading-tight">{fileName}</h1>
+                  <p className="text-sm text-[var(--text-secondary)]">Interactive Dashboard</p>
+                </div>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
                 {hiddenWidgets.length > 0 && (
