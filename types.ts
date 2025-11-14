@@ -25,13 +25,14 @@ export interface ComputationResult {
 }
 
 // --- WIDGETS ---
-export type WidgetSize = '1/3' | '1/2' | '2/3' | 'full';
+export type WidgetSize = '1/4' | '1/3' | '1/2' | '2/3' | 'full';
 export type WidgetType = 'datatable' | 'chart' | 'kpi';
 
 export interface BaseWidget {
   id: string;
   type: WidgetType;
   size: WidgetSize;
+  isHidden?: boolean;
 }
 
 // Chart Widget
@@ -42,6 +43,14 @@ export interface ChartWidgetConfig {
   seriesConfig: Record<string, Computation>;
   title: string;
   seriesColors: Record<string, string>;
+  valueColors?: Record<string, string>;
+  seriesType?: Record<string, 'bar' | 'line'>;
+  showDataLabels?: boolean;
+  referenceLine?: {
+    label: string;
+    value: number;
+    color: string;
+  };
 }
 export interface ChartWidget extends BaseWidget {
   type: 'chart';
@@ -51,7 +60,7 @@ export interface ChartWidget extends BaseWidget {
 // KPI Widget
 export interface KpiWidgetConfig {
   title: string;
-  column: string;
+  valueFormula: string;
   computation: Computation;
 }
 export interface KpiWidget extends BaseWidget {

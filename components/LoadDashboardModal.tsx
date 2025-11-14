@@ -32,31 +32,31 @@ const LoadDashboardModal: React.FC<LoadDashboardModalProps> = ({ isOpen, onClose
     <Modal isOpen={isOpen} onClose={onClose} title="Load Dashboard">
       <div className="flex flex-col gap-4">
         {dashboards.length === 0 ? (
-          <div className="text-center text-gray-500 py-12">
+          <div className="text-center text-[var(--text-tertiary)] py-12">
             <p className="text-lg">You have no saved dashboards yet.</p>
             <p>Create a dashboard and click "Save" to see it here.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {dashboards.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map((dash) => (
-              <div key={dash.name} className="bg-gray-700/50 rounded-lg p-4 flex flex-col justify-between group">
+              <div key={dash.name} className="bg-[var(--bg-contrast)] rounded-lg p-4 flex flex-col justify-between group">
                 <div>
                     <div className="flex justify-between items-start">
-                        <h3 className="font-bold text-lg text-white mb-1">{dash.name}</h3>
+                        <h3 className="font-bold text-lg mb-1">{dash.name}</h3>
                         <button 
                             onClick={(e) => { e.stopPropagation(); onDelete(dash.name); }} 
-                            className="text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="text-[var(--text-tertiary)] hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
                             aria-label={`Delete ${dash.name}`}
                         >
                             <CloseIcon className="w-5 h-5" />
                         </button>
                     </div>
-                  <p className="text-sm text-gray-400 truncate" title={dash.fileName}>{dash.fileName}</p>
-                  <p className="text-xs text-gray-500 mt-1">Saved {timeAgo(dash.createdAt)}</p>
+                  <p className="text-sm text-[var(--text-secondary)] truncate" title={dash.fileName}>{dash.fileName}</p>
+                  <p className="text-xs text-[var(--text-tertiary)] mt-1">Saved {timeAgo(dash.createdAt)}</p>
                 </div>
                 <button
                   onClick={() => onLoad(dash)}
-                  className="mt-4 w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2 px-4 rounded-lg transition-all"
+                  className="mt-4 w-full flex items-center justify-center gap-2 bg-[var(--bg-accent)] hover:bg-[var(--bg-accent-hover)] text-[var(--text-on-accent)] font-semibold py-2 px-4 rounded-lg transition-all"
                 >
                   <FolderOpenIcon /> Load
                 </button>

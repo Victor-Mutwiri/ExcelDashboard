@@ -1,5 +1,4 @@
 import * as XLSX from 'xlsx';
-// fix: Imported `ParsedFile` type to resolve reference error.
 import type { ColumnConfig, RowData, ParsedFile } from '../types';
 import { evaluateFormula } from './formulaEvaluator';
 

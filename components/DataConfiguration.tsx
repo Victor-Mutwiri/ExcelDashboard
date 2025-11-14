@@ -32,19 +32,19 @@ const DraggableHeader: React.FC<{
       onDragStart={() => onDragStart(index)}
       onDrop={() => onDrop(index)}
       onDragOver={handleDragOver}
-      className={`p-3 bg-gray-700 rounded-md flex items-center gap-2 group ${config.formula ? 'cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'}`}
+      className={`p-3 bg-[var(--bg-contrast)] rounded-md flex items-center gap-2 group ${config.formula ? 'cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'}`}
     >
       <input
         type="text"
         value={config.label}
         onChange={(e) => onLabelChange(config.id, e.target.value)}
-        className="flex-grow bg-transparent text-white font-semibold focus:ring-1 focus:ring-indigo-500 focus:outline-none rounded px-2 py-1"
+        className="flex-grow bg-transparent font-semibold focus:ring-1 focus:ring-[var(--ring-color)] focus:outline-none rounded px-2 py-1"
         disabled={!!config.formula}
       />
-       {config.formula && <span title="Calculated Column" className="text-indigo-400">ƒx</span>}
+       {config.formula && <span title="Calculated Column" className="text-[var(--color-accent)]">ƒx</span>}
       <button
         onClick={() => onRemove(config.id)}
-        className="text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+        className="text-[var(--text-tertiary)] hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
         aria-label={`Remove column ${config.label}`}
       >
         <CloseIcon className="w-4 h-4" />
@@ -160,15 +160,15 @@ const DataConfiguration: React.FC<DataConfigurationProps> = ({
 
   if (!selectedSheet && sheetNames.length > 1) {
     return (
-      <div className="w-full max-w-3xl p-8 bg-gray-800 rounded-2xl shadow-lg">
-        <h2 className="text-2xl font-bold text-white mb-2">Select a Worksheet</h2>
-        <p className="text-gray-400 mb-6">Your file "{fileName}" contains multiple sheets. Please choose one to continue.</p>
+      <div className="w-full max-w-3xl p-8 bg-[var(--bg-card)] rounded-2xl shadow-lg">
+        <h2 className="text-2xl font-bold mb-2">Select a Worksheet</h2>
+        <p className="text-[var(--text-secondary)] mb-6">Your file "{fileName}" contains multiple sheets. Please choose one to continue.</p>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {sheetNames.map(name => (
             <button
               key={name}
               onClick={() => onSheetSelect(name)}
-              className="flex items-center gap-2 p-4 bg-gray-700 hover:bg-indigo-600 rounded-lg transition-colors"
+              className="flex items-center gap-2 p-4 bg-[var(--bg-contrast)] hover:bg-[var(--bg-accent)] hover:text-[var(--text-on-accent)] rounded-lg transition-colors"
             >
               <TableIcon /> {name}
             </button>
@@ -180,13 +180,13 @@ const DataConfiguration: React.FC<DataConfigurationProps> = ({
 
   return (
     <>
-      <div className="w-full max-w-6xl p-8 bg-gray-800 rounded-2xl shadow-lg flex flex-col gap-6">
+      <div className="w-full max-w-6xl p-8 bg-[var(--bg-card)] rounded-2xl shadow-lg flex flex-col gap-6">
           <div>
-              <h2 className="text-2xl font-bold text-white">Configure Your Data</h2>
-              <p className="text-gray-400">Rename, reorder, or remove columns. This will be the structure for your dashboard.</p>
+              <h2 className="text-2xl font-bold">Configure Your Data</h2>
+              <p className="text-[var(--text-secondary)]">Rename, reorder, or remove columns. This will be the structure for your dashboard.</p>
           </div>
 
-          <div className="bg-gray-900/50 p-4 rounded-lg">
+          <div className="bg-black/10 p-4 rounded-lg">
               <h3 className="font-semibold text-lg mb-3">Columns</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
               {config.map((c, i) => (
@@ -203,17 +203,17 @@ const DataConfiguration: React.FC<DataConfigurationProps> = ({
               </div>
           </div>
 
-          <div className="bg-gray-900/50 p-4 rounded-lg overflow-x-auto">
+          <div className="bg-black/10 p-4 rounded-lg overflow-x-auto">
               <h3 className="font-semibold mb-3 text-lg">Data Preview</h3>
               <table className="w-full text-left text-sm">
               <thead>
                   <tr>
-                  {config.map(c => <th key={c.id} className="p-2 font-semibold border-b border-gray-600">{c.label}</th>)}
+                  {config.map(c => <th key={c.id} className="p-2 font-semibold border-b border-[var(--border-color-heavy)]">{c.label}</th>)}
                   </tr>
               </thead>
               <tbody>
                   {previewRows.map((row, rowIndex) => (
-                    <tr key={rowIndex} className="border-b border-gray-700/50">
+                    <tr key={rowIndex} className="border-b border-[var(--border-color)]">
                         {config.map(c => {
                             const value = row[c.id];
                             const displayValue = typeof value === 'number' ? value.toLocaleString(undefined, {maximumFractionDigits: 2}) : String(value ?? '');
@@ -226,10 +226,10 @@ const DataConfiguration: React.FC<DataConfigurationProps> = ({
           </div>
 
           <div className="flex justify-between items-center mt-4">
-              <button onClick={onReset} className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+              <button onClick={onReset} className="flex items-center gap-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
               <ResetIcon /> Back
               </button>
-              <button onClick={() => onConfirm(config)} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-6 rounded-lg transition-colors">
+              <button onClick={() => onConfirm(config)} className="flex items-center gap-2 bg-[var(--bg-accent)] hover:bg-[var(--bg-accent-hover)] text-[var(--text-on-accent)] font-bold py-2 px-6 rounded-lg transition-colors">
               <CheckIcon /> Confirm & Build Dashboard
               </button>
           </div>

@@ -1,55 +1,29 @@
 import React, { useMemo } from 'react';
-import { KpiWidget, RowData, Computation } from '../types';
+import { KpiWidget, RowData, ColumnConfig } from '../types';
+import { calculateKpiValue } from '../utils/kpiEvaluator';
 
 interface KpiWidgetComponentProps {
   widget: KpiWidget;
   data: RowData[];
+  columnConfig: ColumnConfig[];
 }
 
-const KpiWidgetComponent: React.FC<KpiWidgetComponentProps> = ({ widget, data }) => {
+const KpiWidgetComponent: React.FC<KpiWidgetComponentProps> = ({ widget, data, columnConfig }) => {
   const { config } = widget;
 
   const computedValue = useMemo(() => {
-    const { column, computation } = config;
-    if (!column) return null;
-
-    const values = data
-      .map(row => row[column])
-      .filter(val => typeof val === 'number') as number[];
-
-    if (values.length === 0 && computation !== 'COUNT') return 0;
-    
-    let result: number;
-    switch (computation) {
-      case 'SUM':
-        result = values.reduce((acc, val) => acc + val, 0);
-        break;
-      case 'AVERAGE':
-        result = values.reduce((acc, val) => acc + val, 0) / values.length;
-        break;
-      case 'MIN':
-        result = Math.min(...values);
-        break;
-      case 'MAX':
-        result = Math.max(...values);
-        break;
-      case 'COUNT':
-        result = data.map(row => row[column]).filter(val => val !== null && val !== undefined).length;
-        break;
-      default:
-        return null;
-    }
-    return result;
-  }, [data, config]);
+    return calculateKpiValue(data, config, columnConfig);
+  }, [data, config, columnConfig]);
 
   const displayValue = computedValue !== null 
     ? computedValue.toLocaleString(undefined, { maximumFractionDigits: 2 }) 
     : 'N/A';
 
   return (
-    <div className="flex flex-col items-center justify-center h-full text-center">
-      <p className="text-sm text-gray-400 uppercase tracking-wider">{config.computation} of {config.column}</p>
-      <p className="text-4xl lg:text-5xl font-bold text-indigo-400 mt-2">{displayValue}</p>
+    <div className="flex flex-col justify-center items-center text-center h-full">
+      <h4 className="text-base text-[var(--text-secondary)] font-semibold truncate">{config.title}</h4>
+      <p className="text-3xl sm:text-4xl font-bold text-[var(--color-accent)] mt-1">{displayValue}</p>
+      <p className="text-sm text-[var(--text-tertiary)] mt-2">{config.computation}</p>
     </div>
   );
 };

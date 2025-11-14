@@ -18,12 +18,12 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }
             onClick={onClose}
         >
             <div 
-                className="bg-gray-800 rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col"
+                className="bg-[var(--bg-card)] rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col"
                 onClick={e => e.stopPropagation()}
             >
-                <header className="flex justify-between items-center p-4 border-b border-gray-700">
-                    <h2 className="text-xl font-bold text-white">{title}</h2>
-                    <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
+                <header className="flex justify-between items-center p-4 border-b border-[var(--border-color)]">
+                    <h2 className="text-xl font-bold">{title}</h2>
+                    <button onClick={onClose} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
                         <CloseIcon />
                     </button>
                 </header>

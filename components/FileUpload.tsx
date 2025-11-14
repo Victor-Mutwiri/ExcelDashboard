@@ -52,7 +52,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, onDataPaste, onOp
           onDragOver={handleDragOver}
           onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}
-          className={`relative flex flex-col items-center justify-center p-10 border-2 border-dashed rounded-lg transition-colors duration-300 ${isDragging ? 'border-indigo-500 bg-gray-700/50' : 'border-gray-500 hover:border-indigo-500'}`}
+          className={`relative flex flex-col items-center justify-center p-10 border-2 border-dashed rounded-lg transition-colors duration-300 ${isDragging ? 'border-[var(--color-accent)] bg-[var(--bg-contrast)]' : 'border-[var(--border-color-heavy)] hover:border-[var(--color-accent)]'}`}
         >
           <input
             type="file"
@@ -61,10 +61,10 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, onDataPaste, onOp
             accept=".xlsx, .xls, .csv"
             onChange={handleFileChange}
           />
-          <div className="text-gray-400">
+          <div className="text-[var(--text-secondary)]">
             <UploadIcon className="mx-auto mb-4 h-12 w-12" />
-            <p className="font-semibold text-gray-300">
-              <span className="text-indigo-400">Click to upload</span> or drag and drop
+            <p className="font-semibold text-[var(--text-primary)]">
+              <span className="text-[var(--color-accent)]">Click to upload</span> or drag and drop
             </p>
             <p className="text-sm mt-1">XLSX, XLS, or CSV files</p>
           </div>
@@ -75,21 +75,21 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, onDataPaste, onOp
   };
 
   return (
-    <div className="w-full max-w-2xl text-center bg-gray-800 rounded-2xl shadow-lg transition-all">
+    <div className="w-full max-w-2xl text-center bg-[var(--bg-card)] rounded-2xl shadow-lg transition-all">
       <div className="p-8">
-        <h1 className="text-4xl font-bold text-white mb-2">DataDash</h1>
-        <p className="text-lg text-gray-400 mb-8">Instantly turn your spreadsheets into interactive dashboards.</p>
+        <h1 className="text-4xl font-bold mb-2">DataDash</h1>
+        <p className="text-lg text-[var(--text-secondary)] mb-8">Instantly turn your spreadsheets into interactive dashboards.</p>
         
-        <div className="flex justify-center border-b border-gray-700 mb-6">
+        <div className="flex justify-center border-b border-[var(--border-color)] mb-6">
             <button 
                 onClick={() => setActiveTab('upload')} 
-                className={`flex items-center gap-2 px-4 py-2 font-semibold transition-colors ${activeTab === 'upload' ? 'text-indigo-400 border-b-2 border-indigo-400' : 'text-gray-400 hover:text-white'}`}
+                className={`flex items-center gap-2 px-4 py-2 font-semibold transition-colors ${activeTab === 'upload' ? 'text-[var(--color-accent)] border-b-2 border-[var(--color-accent)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
             >
                 <UploadIcon /> Upload File
             </button>
             <button 
                 onClick={() => setActiveTab('paste')} 
-                className={`flex items-center gap-2 px-4 py-2 font-semibold transition-colors ${activeTab === 'paste' ? 'text-indigo-400 border-b-2 border-indigo-400' : 'text-gray-400 hover:text-white'}`}
+                className={`flex items-center gap-2 px-4 py-2 font-semibold transition-colors ${activeTab === 'paste' ? 'text-[var(--color-accent)] border-b-2 border-[var(--color-accent)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
             >
                 <ClipboardIcon /> Paste Data
             </button>
@@ -98,10 +98,10 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, onDataPaste, onOp
         {renderContent()}
 
       </div>
-      <div className="bg-gray-800/50 p-4 rounded-b-2xl">
+      <div className="bg-black/10 p-4 rounded-b-2xl">
         <button 
             onClick={onOpenLoadModal}
-            className="flex items-center justify-center gap-2 mx-auto text-indigo-400 font-semibold hover:text-indigo-300 transition-colors"
+            className="flex items-center justify-center gap-2 mx-auto text-[var(--color-accent)] font-semibold hover:text-[var(--color-accent-secondary)] transition-colors"
         >
             <FolderOpenIcon /> Or load a saved dashboard
         </button>

@@ -38,7 +38,7 @@ const SaveDashboardModal: React.FC<SaveDashboardModalProps> = ({ isOpen, onClose
     <Modal isOpen={isOpen} onClose={onClose} title="Save Dashboard">
       <div className="flex flex-col gap-4">
         <div>
-          <label htmlFor="dashboard-name" className="block text-sm font-medium text-gray-300 mb-1">
+          <label htmlFor="dashboard-name" className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
             Dashboard Name
           </label>
           <input
@@ -50,17 +50,17 @@ const SaveDashboardModal: React.FC<SaveDashboardModalProps> = ({ isOpen, onClose
               setError('');
             }}
             onKeyDown={(e) => e.key === 'Enter' && handleSave()}
-            className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+            className="w-full bg-[var(--bg-input)] border border-[var(--border-color)] rounded-md px-3 py-2 focus:ring-2 focus:ring-[var(--ring-color)] focus:outline-none"
             placeholder="e.g., Q3 Sales Report"
             autoFocus
           />
           {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
         </div>
-        <div className="flex justify-end gap-4 mt-4">
-          <button type="button" onClick={onClose} className="py-2 px-4 bg-gray-600 hover:bg-gray-500 rounded-lg transition-colors">
+        <div className="flex justify-end gap-4 mt-4 pt-4 border-t border-[var(--border-color)]">
+          <button type="button" onClick={onClose} className="py-2 px-4 bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg transition-colors">
             Cancel
           </button>
-          <button type="button" onClick={handleSave} className="flex items-center gap-2 py-2 px-4 bg-indigo-600 hover:bg-indigo-500 rounded-lg transition-colors font-semibold">
+          <button type="button" onClick={handleSave} className="flex items-center gap-2 py-2 px-4 bg-[var(--bg-accent)] hover:bg-[var(--bg-accent-hover)] text-[var(--text-on-accent)] rounded-lg transition-colors font-semibold">
             <SaveIcon /> Save
           </button>
         </div>

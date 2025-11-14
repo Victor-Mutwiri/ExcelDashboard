@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { AppState, ColumnConfig, RowData, ParsedFile, SavedDashboard, AnyWidget, ChartWidgetConfig, KpiWidgetConfig, WidgetSize } from './types';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import { AppState, ColumnConfig, RowData, ParsedFile, SavedDashboard, AnyWidget, ChartWidgetConfig, KpiWidgetConfig, WidgetSize, ChartWidget } from './types';
 import FileUpload from './components/FileUpload';
 import DataConfiguration from './components/DataConfiguration';
 import DashboardCanvas from './components/DashboardCanvas';
@@ -10,8 +10,11 @@ import SaveDashboardModal from './components/SaveDashboardModal';
 import KpiModal from './components/KpiModal';
 import Toast from './components/Toast';
 import LandingPage from './components/LandingPage';
+import ManageHiddenWidgetsModal from './components/ManageHiddenWidgetsModal';
 import { parseFile, processData } from './utils/fileParser';
-import { ChartIcon, PlusIcon, ResetIcon, SaveIcon, FolderOpenIcon, KpiIcon, TableIcon } from './components/Icons';
+import { ChartIcon, PlusIcon, ResetIcon, SaveIcon, FolderOpenIcon, KpiIcon, TableIcon, ExportIcon, PaintBrushIcon, EyeIcon, CloseIcon } from './components/Icons';
+import { themes, ThemeName } from './themes';
+
 
 export default function App() {
   const [showLandingPage, setShowLandingPage] = useState(true);
@@ -29,10 +32,31 @@ export default function App() {
   const [isLoadModalOpen, setIsLoadModalOpen] = useState(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [isKpiModalOpen, setIsKpiModalOpen] = useState(false);
+  const [isManageHiddenOpen, setIsManageHiddenOpen] = useState(false);
+  const [editingWidgetId, setEditingWidgetId] = useState<string | null>(null);
+
   const [isAddWidgetMenuOpen, setAddWidgetMenuOpen] = useState(false);
+  const [isExportMenuOpen, setExportMenuOpen] = useState(false);
+  const [isThemeMenuOpen, setThemeMenuOpen] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
+
 
   const [savedDashboards, setSavedDashboards] = useState<SavedDashboard[]>([]);
+  const [theme, setTheme] = useState<ThemeName>(() => {
+    return (localStorage.getItem('dashboard-theme') as ThemeName) || 'dark';
+  });
+
+  useEffect(() => {
+    document.body.classList.toggle('print-preview-mode', isPreviewMode);
+  }, [isPreviewMode]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    Object.values(themes).forEach(t => root.classList.remove(`theme-${t.name.toLowerCase()}`));
+    root.classList.add(`theme-${theme}`);
+    localStorage.setItem('dashboard-theme', theme);
+  }, [theme]);
 
   useEffect(() => {
     try {
@@ -152,6 +176,7 @@ export default function App() {
     setColumnConfig([]);
     setData([]);
     setWidgets([]);
+    setIsPreviewMode(false);
   };
 
   const handleSaveDashboard = (name: string) => {
@@ -189,22 +214,27 @@ export default function App() {
     localStorage.setItem('dashboards', JSON.stringify(updatedDashboards));
   };
   
-  const handleAddChart = (config: ChartWidgetConfig) => {
-    const newChartWidget: AnyWidget = {
-      id: `chart-${Date.now()}`,
-      type: 'chart',
-      size: '1/2',
-      config
-    };
-    setWidgets(prev => [...prev, newChartWidget]);
+  const handleSaveChart = (config: ChartWidgetConfig) => {
+    if (editingWidgetId) {
+      setWidgets(prev => prev.map(w => (w.id === editingWidgetId && w.type === 'chart' ? { ...w, config } : w)));
+    } else {
+      const newChartWidget: AnyWidget = {
+        id: `chart-${Date.now()}`,
+        type: 'chart',
+        size: '1/2',
+        config
+      };
+      setWidgets(prev => [...prev, newChartWidget]);
+    }
     setIsChartModalOpen(false);
+    setEditingWidgetId(null);
   };
   
   const handleAddKpi = (config: KpiWidgetConfig) => {
     const newKpiWidget: AnyWidget = {
         id: `kpi-${Date.now()}`,
         type: 'kpi',
-        size: '1/3',
+        size: '1/4',
         config,
     };
     setWidgets(prev => [...prev, newKpiWidget]);
@@ -213,6 +243,18 @@ export default function App() {
   
   const handleDeleteWidget = (id: string) => {
     setWidgets(prev => prev.filter(w => w.id !== id));
+  };
+
+  const handleEditWidget = (id: string) => {
+    const widget = widgets.find(w => w.id === id);
+    if (widget?.type === 'chart') {
+      setEditingWidgetId(id);
+      setIsChartModalOpen(true);
+    }
+  };
+
+  const handleToggleWidgetVisibility = (id: string) => {
+    setWidgets(prev => prev.map(w => w.id === id ? { ...w, isHidden: !w.isHidden } : w));
   };
 
   const handleUpdateWidgetSize = (id: string, size: WidgetSize) => {
@@ -233,6 +275,21 @@ export default function App() {
         setWidgets(prev => [...prev, newTableWidget]);
     }
   };
+  
+  const handleExportPDF = () => {
+    setExportMenuOpen(false);
+    setIsPreviewMode(false);
+    setToast({ message: "Use your browser's print dialog to 'Save as PDF'.", type: 'success' });
+    setTimeout(() => {
+        window.print();
+    }, 100);
+  };
+
+  const hiddenWidgets = useMemo(() => widgets.filter(w => w.isHidden), [widgets]);
+  const widgetToEdit = useMemo(() =>
+    editingWidgetId ? widgets.find(w => w.id === editingWidgetId) : undefined,
+    [editingWidgetId, widgets]
+  );
 
   if (showLandingPage) {
     return <LandingPage onGetStarted={() => setShowLandingPage(false)} />;
@@ -264,36 +321,74 @@ export default function App() {
       case 'DASHBOARD':
         return (
           <div className="w-full h-full flex flex-col p-4 sm:p-6 lg:p-8 gap-6">
-            <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            {isPreviewMode && (
+                <div className="fixed top-0 left-0 right-0 bg-gray-800 text-white p-3 flex justify-center items-center gap-4 z-50">
+                    <p className="font-semibold">Print Preview Mode</p>
+                    <button onClick={() => setIsPreviewMode(false)} className="px-4 py-1 text-sm font-semibold bg-gray-600 hover:bg-gray-500 rounded-lg flex items-center gap-2">
+                        <CloseIcon className="w-4 h-4" /> Exit Preview
+                    </button>
+                </div>
+            )}
+            <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 noprint bg-[var(--bg-header)] theme-corporate:text-white p-4 rounded-xl shadow-md">
               <div>
-                <h1 className="text-2xl font-bold text-white">{fileName}</h1>
-                <p className="text-gray-400">Your interactive dashboard is ready.</p>
+                <h1 className="text-2xl font-bold">{fileName}</h1>
+                <p className="text-[var(--text-secondary)]">Your interactive dashboard is ready.</p>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
-                <button onClick={handleReset} className="px-4 py-2 text-sm font-semibold text-gray-300 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center gap-2">
+                {hiddenWidgets.length > 0 && (
+                  <button onClick={() => setIsManageHiddenOpen(true)} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2">
+                    <EyeIcon /> Hidden <span className="bg-[var(--bg-accent)] text-[var(--text-on-accent)] text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">{hiddenWidgets.length}</span>
+                  </button>
+                )}
+                <button onClick={handleReset} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2">
                   <ResetIcon /> Start Over
                 </button>
-                 <button onClick={() => setIsLoadModalOpen(true)} className="px-4 py-2 text-sm font-semibold text-white bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center gap-2">
+                 <button onClick={() => setIsLoadModalOpen(true)} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2">
                   <FolderOpenIcon /> Load
                 </button>
-                <button onClick={() => setIsSaveModalOpen(true)} className="px-4 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg flex items-center gap-2">
-                  <SaveIcon /> Save Dashboard
+                <button onClick={() => setIsSaveModalOpen(true)} className="px-4 py-2 text-sm font-semibold text-[var(--text-on-accent)] bg-[var(--bg-accent)] hover:bg-[var(--bg-accent-hover)] rounded-lg flex items-center gap-2">
+                  <SaveIcon /> Save
                 </button>
+                 <div className="relative">
+                    <button onClick={() => setThemeMenuOpen(prev => !prev)} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2">
+                        <PaintBrushIcon /> Theme
+                    </button>
+                    {isThemeMenuOpen && (
+                        <div className="absolute top-full right-0 mt-2 w-48 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg shadow-xl z-20">
+                            {Object.entries(themes).map(([key, value]) => (
+                                <button key={key} onClick={() => { setTheme(key as ThemeName); setThemeMenuOpen(false); }} className={`w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)] ${theme === key ? 'font-bold text-[var(--color-accent)]' : ''}`}>
+                                    {value.name}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+                 <div className="relative">
+                    <button onClick={() => setExportMenuOpen(prev => !prev)} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2">
+                        <ExportIcon /> Export
+                    </button>
+                    {isExportMenuOpen && (
+                        <div className="absolute top-full right-0 mt-2 w-48 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg shadow-xl z-20">
+                            <button onClick={() => { setIsPreviewMode(true); setExportMenuOpen(false); }} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)]">Print Preview</button>
+                            <button onClick={handleExportPDF} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)]">Save as PDF</button>
+                        </div>
+                    )}
+                </div>
                 <div className="relative">
                     <button onClick={() => setAddWidgetMenuOpen(prev => !prev)} className="px-4 py-2 text-sm font-semibold text-white bg-green-600 hover:bg-green-500 rounded-lg flex items-center gap-2">
                         <PlusIcon /> Add Widget
                     </button>
                     {isAddWidgetMenuOpen && (
-                        <div className="absolute top-full right-0 mt-2 w-48 bg-gray-700 border border-gray-600 rounded-lg shadow-xl z-20">
-                            <button onClick={() => handleAddWidget('kpi')} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-gray-600"><KpiIcon /> KPI Card</button>
-                            <button onClick={() => handleAddWidget('chart')} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-gray-600"><ChartIcon /> Chart</button>
-                            <button onClick={() => handleAddWidget('datatable')} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-gray-600"><TableIcon /> Data Table</button>
+                        <div className="absolute top-full right-0 mt-2 w-48 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg shadow-xl z-20">
+                            <button onClick={() => handleAddWidget('kpi')} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)]"><KpiIcon /> KPI Card</button>
+                            <button onClick={() => handleAddWidget('chart')} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)]"><ChartIcon /> Chart</button>
+                            <button onClick={() => handleAddWidget('datatable')} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)]"><TableIcon /> Data Table</button>
                         </div>
                     )}
                 </div>
               </div>
             </header>
-            <main className="flex-grow overflow-auto -m-3 p-3">
+            <main className="flex-grow overflow-auto -m-3 p-3 printable-area">
               <DashboardCanvas 
                 widgets={widgets}
                 setWidgets={setWidgets}
@@ -301,6 +396,9 @@ export default function App() {
                 columnConfig={columnConfig}
                 onDeleteWidget={handleDeleteWidget}
                 onUpdateWidgetSize={handleUpdateWidgetSize}
+                onToggleWidgetVisibility={handleToggleWidgetVisibility}
+                onEditWidget={handleEditWidget}
+                chartColors={themes[theme].chartColors}
               />
             </main>
           </div>
@@ -309,54 +407,69 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100 flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center">
       {renderContent()}
       
-      <ChartModal 
-        isOpen={isChartModalOpen}
-        onClose={() => setIsChartModalOpen(false)}
-        data={data}
-        columnConfig={columnConfig}
-        onSave={handleAddChart}
-      />
+      <div className="noprint">
+        <ChartModal 
+          isOpen={isChartModalOpen}
+          onClose={() => {
+            setIsChartModalOpen(false);
+            setEditingWidgetId(null);
+          }}
+          data={data}
+          columnConfig={columnConfig}
+          onSave={handleSaveChart}
+          chartColors={themes[theme].chartColors}
+          initialConfig={widgetToEdit?.type === 'chart' ? widgetToEdit.config : undefined}
+        />
 
-      <CalculatedColumnModal 
-        isOpen={isCalcModalOpen}
-        onClose={() => setIsCalcModalOpen(false)}
-        numericColumns={columnConfig.filter(c => c.isNumeric)}
-        existingLabels={columnConfig.map(c => c.label)}
-        onSubmit={handleAddCalculatedColumn}
-      />
-      
-      <KpiModal
-        isOpen={isKpiModalOpen}
-        onClose={() => setIsKpiModalOpen(false)}
-        numericColumns={columnConfig.filter(c => c.isNumeric)}
-        onSubmit={handleAddKpi}
-      />
+        <CalculatedColumnModal 
+          isOpen={isCalcModalOpen}
+          onClose={() => setIsCalcModalOpen(false)}
+          numericColumns={columnConfig.filter(c => c.isNumeric)}
+          existingLabels={columnConfig.map(c => c.label)}
+          onSubmit={handleAddCalculatedColumn}
+        />
+        
+        <KpiModal
+          isOpen={isKpiModalOpen}
+          onClose={() => setIsKpiModalOpen(false)}
+          data={data}
+          numericColumns={columnConfig.filter(c => c.isNumeric)}
+          onSubmit={handleAddKpi}
+        />
 
-      <LoadDashboardModal
-        isOpen={isLoadModalOpen}
-        onClose={() => setIsLoadModalOpen(false)}
-        dashboards={savedDashboards}
-        onLoad={handleLoadDashboard}
-        onDelete={handleDeleteDashboard}
-      />
+        <LoadDashboardModal
+          isOpen={isLoadModalOpen}
+          onClose={() => setIsLoadModalOpen(false)}
+          dashboards={savedDashboards}
+          onLoad={handleLoadDashboard}
+          onDelete={handleDeleteDashboard}
+        />
 
-      <SaveDashboardModal
-        isOpen={isSaveModalOpen}
-        onClose={() => setIsSaveModalOpen(false)}
-        onSave={handleSaveDashboard}
-        existingNames={savedDashboards.map(d => d.name)}
-      />
+        <SaveDashboardModal
+          isOpen={isSaveModalOpen}
+          onClose={() => setIsSaveModalOpen(false)}
+          onSave={handleSaveDashboard}
+          existingNames={savedDashboards.map(d => d.name)}
+        />
 
-      {toast && (
-          <Toast
-              message={toast.message}
-              type={toast.type}
-              onClose={() => setToast(null)}
-          />
-      )}
+        <ManageHiddenWidgetsModal
+          isOpen={isManageHiddenOpen}
+          onClose={() => setIsManageHiddenOpen(false)}
+          hiddenWidgets={hiddenWidgets}
+          onToggleVisibility={handleToggleWidgetVisibility}
+        />
+
+        {toast && (
+            <Toast
+                message={toast.message}
+                type={toast.type}
+                onClose={() => setToast(null)}
+            />
+        )}
+      </div>
     </div>
   );
 }

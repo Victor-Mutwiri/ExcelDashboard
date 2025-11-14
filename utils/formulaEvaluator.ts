@@ -10,11 +10,18 @@ const precedence: Record<string, number> = {
 
 /**
  * Tokenizes the formula string into an array of numbers, operators, and placeholders.
- * Example: "( {col_1} + 100 ) * 2" -> ["(", "{col_1}", "+", "100", ")", "*", "2"]
+ * This version handles unary minus signs correctly.
+ * Example: "( {col_1} + -100 ) * -2" -> ["(", "{col_1}", "+", "-100", ")", "*", "-2"]
  */
 const tokenize = (formula: string): string[] => {
-  const spacedFormula = formula.replace(/([+\-*/()])/g, ' $1 ');
-  return spacedFormula.trim().split(/\s+/);
+  // Use a regex that can identify numbers (including negatives), column placeholders, and operators
+  const regex = /({[^}]+})|(-?\d*\.?\d+)|([+\-*/()])/g;
+  const tokens: string[] = [];
+  let match;
+  while ((match = regex.exec(formula)) !== null) {
+    tokens.push(match[0]);
+  }
+  return tokens;
 };
 
 /**
@@ -24,13 +31,22 @@ const tokenize = (formula: string): string[] => {
 const toPostfix = (tokens: string[]): string[] => {
   const outputQueue: string[] = [];
   const operatorStack: string[] = [];
+  let lastTokenWasOperator = true; // Start as true to handle leading unary minus
 
   for (const token of tokens) {
     if (!isNaN(parseFloat(token))) { // It's a number
       outputQueue.push(token);
+      lastTokenWasOperator = false;
     } else if (token.startsWith('{') && token.endsWith('}')) { // It's a column placeholder
         outputQueue.push(token);
-    } else if (token in precedence) { // It's an operator
+        lastTokenWasOperator = false;
+    } else if (token === '-' && lastTokenWasOperator) { // Unary minus
+      // This is a simplification; for a full implementation, we'd handle it differently
+      // But since our tokenizer already creates negative numbers, we just need to ensure it's not treated as a binary op
+      // In this setup, tokenize already handles it, so this branch might be more for validation
+      operatorStack.push(token); // Or handle as part of a number
+      lastTokenWasOperator = true;
+    } else if (token in precedence) { // It's a binary operator
       while (
         operatorStack.length > 0 &&
         operatorStack[operatorStack.length - 1] !== '(' &&
@@ -39,8 +55,10 @@ const toPostfix = (tokens: string[]): string[] => {
         outputQueue.push(operatorStack.pop()!);
       }
       operatorStack.push(token);
+      lastTokenWasOperator = true;
     } else if (token === '(') {
       operatorStack.push(token);
+      lastTokenWasOperator = true;
     } else if (token === ')') {
       while (operatorStack.length > 0 && operatorStack[operatorStack.length - 1] !== '(') {
         outputQueue.push(operatorStack.pop()!);
@@ -50,6 +68,7 @@ const toPostfix = (tokens: string[]): string[] => {
       } else {
         throw new Error('Mismatched parentheses');
       }
+      lastTokenWasOperator = false;
     } else {
         throw new Error(`Invalid token: ${token}`);
     }
@@ -65,6 +84,7 @@ const toPostfix = (tokens: string[]): string[] => {
 
   return outputQueue;
 };
+
 
 /**
  * Evaluates a postfix expression using a stack.
@@ -83,7 +103,15 @@ const evaluatePostfix = (postfixTokens: string[], rowValues: Record<string, numb
         if (typeof value !== 'number') return null; // Dependency value is missing or invalid
         stack.push(value);
     } else if (token in precedence) {
-      if (stack.length < 2) throw new Error('Invalid expression syntax');
+      if (stack.length < 2) { // Binary operators need two operands
+        // This could be a unary minus if the tokenizer didn't handle it
+        if (token === '-' && stack.length === 1) {
+          const a = stack.pop()!;
+          stack.push(-a);
+          continue;
+        }
+        throw new Error('Invalid expression syntax');
+      }
       const b = stack.pop()!;
       const a = stack.pop()!;
       switch (token) {
@@ -106,7 +134,9 @@ const evaluatePostfix = (postfixTokens: string[], rowValues: Record<string, numb
  */
 export const evaluateFormula = (formula: string, rowValues: Record<string, number>): number | null => {
     try {
-        const tokens = tokenize(formula);
+        // A simple pre-processing step to handle unary minus correctly for our shunting-yard
+        const processedFormula = formula.replace(/(\(\s*)-/g, '$1 -1 * ').replace(/,\s*-/g, ', -1 * ');
+        const tokens = tokenize(processedFormula);
         const postfix = toPostfix(tokens);
         return evaluatePostfix(postfix, rowValues);
     } catch (error) {
@@ -124,6 +154,11 @@ export const validateFormula = (formula: string): { isValid: boolean, error?: st
     }
     try {
         const tokens = tokenize(formula);
+        // Quick check for hanging operators
+        const lastToken = tokens[tokens.length -1];
+        if (lastToken in precedence) {
+            return { isValid: false, error: 'Formula cannot end with an operator.'};
+        }
         toPostfix(tokens); // This will throw an error on syntax issues like mismatched parens.
         return { isValid: true };
     } catch (error: any) {

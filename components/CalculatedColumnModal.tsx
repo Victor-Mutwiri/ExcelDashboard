@@ -53,7 +53,6 @@ const CalculatedColumnModal: React.FC<CalculatedColumnModalProps> = ({
     const sampleDisplay: Record<string, number> = {};
 
     uniqueColIds.forEach(idWithBraces => {
-      // fix: Cast `idWithBraces` to string to resolve TypeScript inference issue.
       const id = (idWithBraces as string).slice(1, -1);
       const col = numericColumns.find(c => c.id === id);
       const randomValue = Math.round(Math.random() * 90 + 10);
@@ -125,7 +124,7 @@ const CalculatedColumnModal: React.FC<CalculatedColumnModalProps> = ({
     <Modal isOpen={isOpen} onClose={onClose} title="Create Calculated Column">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
-          <label htmlFor="new-column-name" className="block text-sm font-medium text-gray-300 mb-1">
+          <label htmlFor="new-column-name" className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
             New Column Name
           </label>
           <input
@@ -133,56 +132,56 @@ const CalculatedColumnModal: React.FC<CalculatedColumnModalProps> = ({
             type="text"
             value={name}
             onChange={(e) => { setName(e.target.value); setError(''); }}
-            className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+            className="w-full bg-[var(--bg-input)] border border-[var(--border-color)] rounded-md px-3 py-2 focus:ring-2 focus:ring-[var(--ring-color)] focus:outline-none"
             placeholder="e.g., Percentage Profit"
           />
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Left side: builder */}
-            <div className="flex flex-col gap-3 p-3 bg-gray-900/50 rounded-lg">
-                <div className="h-16 p-2 bg-gray-800 rounded-md border border-gray-700 flex items-center gap-1 flex-wrap overflow-x-auto">
+            <div className="flex flex-col gap-3 p-3 bg-black/10 rounded-lg">
+                <div className="h-16 p-2 bg-[var(--bg-input)] rounded-md border border-[var(--border-color)] flex items-center gap-1 flex-wrap overflow-x-auto">
                     {formula.length === 0 
-                        ? <span className="text-gray-500">Click buttons below to build formula...</span>
+                        ? <span className="text-[var(--text-tertiary)]">Click buttons below to build formula...</span>
                         : formulaDisplay
                     }
                 </div>
                 <div className="grid grid-cols-4 gap-2">
-                    {operators.map(op => <button type="button" key={op} onClick={() => handleAddToken({type: 'operator', value: op, text: op})} className="h-10 bg-gray-700 hover:bg-gray-600 rounded-md text-cyan-400 text-lg font-mono">{op}</button>)}
-                    <button type="button" onClick={() => handleAddToken({type: 'paren', value: '(', text: '('})} className="h-10 bg-gray-700 hover:bg-gray-600 rounded-md text-lg font-mono">(</button>
-                    <button type="button" onClick={() => handleAddToken({type: 'paren', value: ')', text: ')'})} className="h-10 bg-gray-700 hover:bg-gray-600 rounded-md text-lg font-mono">)</button>
-                    <button type="button" onClick={handleBackspace} className="h-10 bg-gray-700 hover:bg-red-500/50 col-span-1 rounded-md">DEL</button>
-                    <button type="button" onClick={handleClear} className="h-10 bg-gray-700 hover:bg-red-500/50 col-span-1 rounded-md">CLR</button>
+                    {operators.map(op => <button type="button" key={op} onClick={() => handleAddToken({type: 'operator', value: op, text: op})} className="h-10 bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-md text-cyan-400 text-lg font-mono">{op}</button>)}
+                    <button type="button" onClick={() => handleAddToken({type: 'paren', value: '(', text: '('})} className="h-10 bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-md text-lg font-mono">(</button>
+                    <button type="button" onClick={() => handleAddToken({type: 'paren', value: ')', text: ')'})} className="h-10 bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-md text-lg font-mono">)</button>
+                    <button type="button" onClick={handleBackspace} className="h-10 bg-[var(--bg-contrast)] hover:bg-red-500/50 col-span-1 rounded-md">DEL</button>
+                    <button type="button" onClick={handleClear} className="h-10 bg-[var(--bg-contrast)] hover:bg-red-500/50 col-span-1 rounded-md">CLR</button>
                     
-                    {numbers.map(num => <button type="button" key={num} onClick={() => handleAddToken({type: 'number', value: num, text: num})} className="h-10 bg-gray-800 hover:bg-gray-700 rounded-md text-amber-400 font-mono">{num}</button>)}
+                    {numbers.map(num => <button type="button" key={num} onClick={() => handleAddToken({type: 'number', value: num, text: num})} className="h-10 bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-md text-amber-400 font-mono">{num}</button>)}
                 </div>
             </div>
 
             {/* Right side: columns & preview */}
             <div className="flex flex-col gap-3">
-                <div className="p-3 bg-gray-900/50 rounded-lg">
+                <div className="p-3 bg-black/10 rounded-lg">
                     <h4 className="font-semibold mb-2">Numeric Columns</h4>
                     <div className="flex flex-wrap gap-2">
-                        {numericColumns.map(c => <button type="button" key={c.id} onClick={() => handleAddToken({type: 'column', value: `{${c.id}}`, text: c.label})} className="px-2 py-1 bg-indigo-600 hover:bg-indigo-500 rounded-md text-sm truncate">{c.label}</button>)}
+                        {numericColumns.map(c => <button type="button" key={c.id} onClick={() => handleAddToken({type: 'column', value: `{${c.id}}`, text: c.label})} className="px-2 py-1 bg-[var(--bg-accent)] hover:bg-[var(--bg-accent-hover)] text-[var(--text-on-accent)] rounded-md text-sm truncate">{c.label}</button>)}
                     </div>
                 </div>
-                 <div className="p-3 bg-gray-900/50 rounded-lg flex-grow">
+                 <div className="p-3 bg-black/10 rounded-lg flex-grow">
                     <h4 className="font-semibold mb-2">Live Preview</h4>
                     <div className="text-sm space-y-2">
                         {livePreview.error ? (
-                            <p className="text-gray-500">{livePreview.error}</p>
+                            <p className="text-[var(--text-tertiary)]">{livePreview.error}</p>
                         ) : (
                             <>
                                 <div>
-                                    <p className="font-semibold text-gray-400">With sample values:</p>
+                                    <p className="font-semibold text-[var(--text-secondary)]">With sample values:</p>
                                     <div className="flex flex-wrap gap-x-4 gap-y-1">
                                         {Object.entries(livePreview.sampleDisplay ?? {}).map(([label, value]) => (
-                                            <p key={label}><span className="text-indigo-300">{label}</span> = <span className="text-amber-300">{value}</span></p>
+                                            <p key={label}><span className="text-[var(--color-accent-secondary)]">{label}</span> = <span className="text-amber-300">{value}</span></p>
                                         ))}
                                     </div>
                                 </div>
                                 <div>
-                                    <p className="font-semibold text-gray-400">Result:</p>
+                                    <p className="font-semibold text-[var(--text-secondary)]">Result:</p>
                                     <p className="text-2xl font-bold text-green-400">{typeof livePreview.result === 'number' ? livePreview.result.toLocaleString(undefined, { maximumFractionDigits: 4 }) : 'Error'}</p>
                                 </div>
                             </>
@@ -194,11 +193,11 @@ const CalculatedColumnModal: React.FC<CalculatedColumnModalProps> = ({
 
         {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
         
-        <div className="flex justify-end gap-4 mt-4">
-          <button type="button" onClick={onClose} className="py-2 px-4 bg-gray-600 hover:bg-gray-500 rounded-lg transition-colors">
+        <div className="flex justify-end gap-4 mt-4 pt-4 border-t border-[var(--border-color)]">
+          <button type="button" onClick={onClose} className="py-2 px-4 bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg transition-colors">
             Cancel
           </button>
-          <button type="submit" className="flex items-center gap-2 py-2 px-4 bg-indigo-600 hover:bg-indigo-500 rounded-lg transition-colors font-semibold">
+          <button type="submit" className="flex items-center gap-2 py-2 px-4 bg-[var(--bg-accent)] hover:bg-[var(--bg-accent-hover)] text-[var(--text-on-accent)] rounded-lg transition-colors font-semibold">
             <CalculatorIcon className="w-5 h-5" /> Create Column
           </button>
         </div>
