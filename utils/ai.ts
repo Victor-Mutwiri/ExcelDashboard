@@ -1,25 +1,79 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import { RowData, AIInsightWidgetConfig, AIServiceConfig } from '../types';
+import { RowData, AIInsightWidgetConfig, AIServiceConfig, ColumnConfig } from '../types';
 
-function getSampleData(data: RowData[], selectedColumns: string[]): string {
-    const sampleSize = 20;
-    const sample = data.slice(0, sampleSize).map(row => {
-        const rowSample: Record<string, any> = {};
-        for (const col of selectedColumns) {
-            rowSample[col] = row[col];
+function getDataSummary(data: RowData[], selectedColumns: string[], columnConfig: ColumnConfig[]): string {
+    const summary: Record<string, any> = {
+        total_rows_in_dataset: data.length,
+        columns_analyzed: selectedColumns,
+        column_summaries: {}
+    };
+
+    selectedColumns.forEach(colName => {
+        const config = columnConfig.find(c => c.label === colName);
+        if (!config) return;
+
+        const values = data.map(row => row[colName]);
+
+        if (config.isNumeric) {
+            const numericValues = values.filter(v => typeof v === 'number') as number[];
+            if (numericValues.length === 0) {
+                summary.column_summaries[colName] = "No valid numeric data found.";
+                return;
+            }
+
+            const sum = numericValues.reduce((a, b) => a + b, 0);
+            const avg = numericValues.length > 0 ? sum / numericValues.length : 0;
+            const min = Math.min(...numericValues);
+            const max = Math.max(...numericValues);
+            const positiveCount = numericValues.filter(v => v > 0).length;
+            const negativeCount = numericValues.filter(v => v < 0).length;
+            const zeroCount = numericValues.filter(v => v === 0).length;
+
+            summary.column_summaries[colName] = {
+                type: 'numeric',
+                count_of_entries: numericValues.length,
+                sum: parseFloat(sum.toFixed(2)),
+                average: parseFloat(avg.toFixed(2)),
+                min: min,
+                max: max,
+                count_of_positive_values: positiveCount,
+                count_of_negative_values: negativeCount,
+                count_of_zeros: zeroCount,
+            };
+        } else { // Categorical
+            const nonNullValues = values.filter(v => v !== null && v !== undefined && String(v).trim() !== '');
+            const frequency: Record<string, number> = {};
+            nonNullValues.forEach(v => {
+                const key = String(v);
+                frequency[key] = (frequency[key] || 0) + 1;
+            });
+
+            const uniqueCount = Object.keys(frequency).length;
+            
+            const MAX_CATEGORIES_TO_SHOW = 15;
+            const sortedCategories = Object.entries(frequency)
+                .sort(([, a], [, b]) => b - a);
+
+            const topCategories = sortedCategories
+                .slice(0, MAX_CATEGORIES_TO_SHOW)
+                .reduce((obj, [key, val]) => ({ ...obj, [key]: val }), {});
+
+            summary.column_summaries[colName] = {
+                type: 'categorical',
+                count_of_entries: nonNullValues.length,
+                count_of_unique_values: uniqueCount,
+                value_distribution: uniqueCount > MAX_CATEGORIES_TO_SHOW 
+                    ? { ...topCategories, '_note': `Showing top ${MAX_CATEGORIES_TO_SHOW} of ${uniqueCount} categories.` }
+                    : topCategories,
+            };
         }
-        return rowSample;
     });
 
-    try {
-        return JSON.stringify(sample, null, 2);
-    } catch (e) {
-        return "Could not serialize sample data.";
-    }
+    return JSON.stringify(summary, null, 2);
 }
 
 const systemInstructionObject = {
-  "role": "You are a specialized, expert Data Analyst AI for a business intelligence (BI) platform. Your function is to analyze the provided dataset (column information and data sample) and deliver actionable, concise business insights.",
+  "role": "You are a specialized, expert Data Analyst AI for a business intelligence (BI) platform. Your function is to analyze the provided dataset (column information and data summary) and deliver actionable, concise business insights.",
   "analysis_goal": "Generate 3-5 high-value, non-obvious business insights that explain performance, trends, or anomalies, and suggest next steps.",
   "output_format": {
     "array_name": "insights",
@@ -27,26 +81,27 @@ const systemInstructionObject = {
     "schema": {
       "insight_title": "string (A descriptive, 3-5 word title)",
       "insight_summary": "string (A 1-2 sentence summary of the key finding)",
-      "analysis_details": "string (A brief explanation of how the insight was derived, referencing specific columns/data points)",
+      "analysis_details": "string (A brief explanation of how the insight was derived, referencing specific columns/data points from the summary)",
       "actionable_recommendation": "string (A clear, practical business step the user should take based on this insight)",
       "confidence_level": "string (High, Medium, or Low, based on data clarity and depth)"
     }
   },
   "analysis_protocol": [
-    "1. **Understand Context:** Review the provided column headers to understand the domain (e.g., Sales, HR, Marketing).",
-    "2. **Identify Key Metrics:** Determine the core metrics (e.g., 'Revenue', 'Cost', 'Count') and categorical dimensions (e.g., 'Region', 'Product', 'Date').",
-    "3. **Detect Anomalies/Trends:** Look for unexpected peaks, dips, correlations, or disproportionate representation across dimensions.",
-    "4. **Formulate Hypothesis:** Create a hypothesis for *why* the observation occurred (e.g., 'Region X has low sales due to low inventory').",
+    "1. **Understand Context:** Review the provided column headers and data summaries to understand the domain (e.g., Sales, HR, Marketing).",
+    "2. **Identify Key Metrics:** Determine the core metrics (e.g., sum of 'Revenue', average 'Cost', count of 'Leads') and categorical dimensions (e.g., 'Region', 'Product').",
+    "3. **Detect Anomalies/Trends:** Look for unexpected distributions, high/low values, or disproportionate representation across dimensions based on the summary statistics.",
+    "4. **Formulate Hypothesis:** Create a hypothesis for *why* the observation occurred (e.g., 'Region X has a high sum of sales because it has the most entries').",
     "5. **Synthesize Insight:** Convert the observation and hypothesis into a clear, non-obvious business insight.",
-    "6. **Provide Action:** For every insight, propose a concrete, actionable step (e.g., 'Investigate inventory levels in Region X')."
+    "6. **Provide Action:** For every insight, propose a concrete, actionable step (e.g., 'Investigate why Region X has a disproportionately high number of sales entries')."
   ],
   "constraints_and_guardrails": [
-    "DO NOT generate purely descriptive statements (e.g., 'The highest revenue was in January.'). Insights must explain *why* or suggest *what to do*.",
-    "DO NOT use the exact raw data values unless necessary for context. Focus on relative comparisons and trends.",
+    "DO NOT generate purely descriptive statements (e.g., 'The sum of sales is 1,000,000.'). Insights must explain *why* or suggest *what to do*.",
+    "Base your analysis solely on the provided summary. Do not invent raw data points.",
     "The final output MUST be named 'insights' conforming strictly to the defined schema.",
-    "If the data sample is too small or irrelevant, state this in the 'analysis_details' of the first insight, but still attempt to provide structure-based insights."
+    "If the data summary is insufficient, state this in the 'analysis_details' of the first insight, but still attempt to provide structure-based insights."
   ]
 };
+
 
 const responseSchema = {
     type: Type.OBJECT,
@@ -159,20 +214,21 @@ async function generateOpenAICompatibleInsight(
 export async function generateInsight(
     data: RowData[],
     widgetConfig: Omit<AIInsightWidgetConfig, 'insight' | 'status' | 'errorMessage'>,
-    aiService: AIServiceConfig
+    aiService: AIServiceConfig,
+    columnConfig: ColumnConfig[]
 ): Promise<string> {
 
     if (!aiService || !aiService.apiKey || !aiService.model) {
         throw new Error('Selected AI service is not configured correctly. Please check API key and model name in AI Settings.');
     }
 
-    const sampleDataJSON = getSampleData(data, widgetConfig.selectedColumns);
+    const dataSummaryJSON = getDataSummary(data, widgetConfig.selectedColumns, columnConfig);
     
     const userPrompt = `
-Analyze the following data sample which has the columns: ${widgetConfig.selectedColumns.join(', ')}.
+Analyze the following data summary. The data has the columns: ${widgetConfig.selectedColumns.join(', ')}.
 
-Data sample (JSON format):
-${sampleDataJSON}
+Data Summary (JSON format):
+${dataSummaryJSON}
 
 Based on the analysis protocol, generate your insights. The final output must be a JSON object with a single key "insights", which is an array of insight objects.
 `;

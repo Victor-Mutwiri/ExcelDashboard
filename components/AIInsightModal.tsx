@@ -82,6 +82,9 @@ const AIInsightModal: React.FC<AIInsightModalProps> = ({ isOpen, onClose, column
                   </label>
                 ))}
             </div>
+            <p className="text-xs text-[var(--text-tertiary)] mt-2">
+                Note: A statistical summary of the selected columns (including counts, sums, averages, etc.) will be sent to the AI, not the raw row-level data. This ensures privacy and accommodates large datasets.
+            </p>
         </div>
 
         <div>

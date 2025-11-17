@@ -326,7 +326,7 @@ export default function App() {
             throw new Error("Selected AI service configuration not found.");
         }
         
-        const insightJsonString = await generateInsight(data, config, aiService);
+        const insightJsonString = await generateInsight(data, config, aiService, columnConfig);
 
         let parsedResponse: { insights: StructuredInsight[] };
         try {
@@ -498,7 +498,7 @@ export default function App() {
         );
       case 'DASHBOARD':
         return (
-          <div className="w-full min-h-screen flex flex-col">
+          <div className="w-full min-h-screen flex flex-col overflow-x-hidden">
             {isPreviewMode && (
                 <div className="fixed top-0 left-0 right-0 bg-gray-800 text-white p-3 flex justify-center items-center gap-4 z-50">
                     <p className="font-semibold">Print Preview Mode</p>
@@ -588,7 +588,7 @@ export default function App() {
   };
 
   const rootContainerClasses = appState === 'DASHBOARD'
-    ? "min-h-screen"
+    ? ""
     : "min-h-screen flex items-center justify-center p-4";
 
   return (
