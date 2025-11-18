@@ -1,6 +1,7 @@
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { AppState, ColumnConfig, RowData, ParsedFile, SavedDashboard, AnyWidget, ChartWidgetConfig, KpiWidgetConfig, WidgetSize, TextWidgetConfig, TitleWidgetConfig, AIServiceConfig, AIInsightWidget, StructuredInsight } from './types';
+import { Analytics } from "@vercel/analytics/react";
 
 // Page Components
 import UploadPage from './pages/UploadPage';
@@ -374,7 +375,12 @@ export default function App() {
 
   // --- RENDER LOGIC ---
   if (showLandingPage) {
-    return <LandingPage onGetStarted={handleGetStarted} />;
+    return (
+      <>
+        <LandingPage onGetStarted={handleGetStarted} />
+        <Analytics />
+      </>
+    );
   }
 
   const renderContent = () => {
@@ -436,6 +442,7 @@ export default function App() {
         <ManageHiddenWidgetsModal isOpen={isManageHiddenOpen} onClose={() => setIsManageHiddenOpen(false)} hiddenWidgets={hiddenWidgets} onToggleVisibility={handleToggleWidgetVisibility} />
         <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onSuccess={handleAuthSuccess} />
         {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+        <Analytics />
       </div>
     </div>
   );
