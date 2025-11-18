@@ -32,6 +32,7 @@ import { generateInsight } from './utils/ai';
 import { themes, ThemeName } from './themes';
 import { isPotentiallyNumeric } from './utils/dataCleaner';
 import { useAuth } from './contexts/AuthContext';
+import { evaluateFormula } from './utils/formulaEvaluator';
 
 const SESSION_STORAGE_KEY = 'sheetsight_active_session';
 
@@ -177,6 +178,7 @@ export default function App() {
       isNumeric: sheetData.slice(1).every(row => row[i] === null || row[i] === '' || isPotentiallyNumeric(row[i])),
     }));
     setColumnConfig(initialConfig);
+    setData([]); // Reset data so ConfigurePage reprocesses or user cleans it
   }, [parsedFile]);
 
   // --- DATA HANDLING & STATE TRANSITIONS ---
@@ -211,11 +213,11 @@ export default function App() {
     }
   }, [handleSheetSelected, handleReset]);
 
-  const handleConfigConfirmed = useCallback((finalConfig: ColumnConfig[]) => {
+  const handleConfigConfirmed = useCallback((finalConfig: ColumnConfig[], cleanedData: RowData[]) => {
     if (!parsedFile || !selectedSheet) return;
     setColumnConfig(finalConfig);
-    const processedData = processData(parsedFile.sheets[selectedSheet], finalConfig);
-    setData(processedData);
+    setData(cleanedData);
+    
     if(appState !== 'DASHBOARD') {
         setWidgets([{ id: `datatable-${Date.now()}`, type: 'datatable', size: 'full', title: fileName }]);
     }
@@ -234,12 +236,30 @@ export default function App() {
     const newConfig = [...columnConfig, newColumn];
     setColumnConfig(newConfig);
 
-    if (appState === 'DASHBOARD' && parsedFile && selectedSheet) {
-      setData(processData(parsedFile.sheets[selectedSheet], newConfig));
+    if (appState === 'DASHBOARD') {
+        setData(prevData => prevData.map(row => {
+            const valueMap: Record<string, number> = {};
+            let canCalculate = true;
+             
+            const colIdRegex = /\{([^}]+)\}/g;
+            let match;
+            while ((match = colIdRegex.exec(formula)) !== null) {
+                 const depId = match[1];
+                 const depConfig = newConfig.find(c => c.id === depId);
+                 if(depConfig && typeof row[depConfig.label] === 'number') {
+                     valueMap[depId] = row[depConfig.label] as number;
+                 } else {
+                     canCalculate = false;
+                 }
+            }
+            
+            const result = canCalculate ? evaluateFormula(formula, valueMap) : null;
+            return { ...row, [name]: result };
+        }));
     }
     
     setIsCalcModalOpen(false);
-  }, [columnConfig, appState, parsedFile, selectedSheet]);
+  }, [columnConfig, appState]);
 
   const handleSaveDashboard = (name: string) => {
     const newDashboard: SavedDashboard = { name, createdAt: new Date().toISOString(), data, columnConfig, fileName, widgets };
@@ -451,8 +471,17 @@ export default function App() {
       case 'UPLOAD':
         return <UploadPage onFileUpload={handleFileUploaded} onDataPaste={handleDataPasted} onOpenLoadModal={() => withAuth(() => setIsLoadModalOpen(true))} />;
       case 'CONFIGURE':
-        if (!parsedFile) return null; // Should not happen
-        return <ConfigurePage fileName={fileName} parsedFile={parsedFile} selectedSheet={selectedSheet} onSheetSelect={(sheet) => handleSheetSelected(sheet)} initialColumnConfig={columnConfig} onConfirm={handleConfigConfirmed} onReset={handleReset} />;
+        if (!parsedFile) return null;
+        return <ConfigurePage 
+                  fileName={fileName} 
+                  parsedFile={parsedFile} 
+                  selectedSheet={selectedSheet} 
+                  onSheetSelect={(sheet) => handleSheetSelected(sheet)} 
+                  initialColumnConfig={columnConfig} 
+                  currentData={data} // Pass current data to persist cleaning
+                  onConfirm={handleConfigConfirmed} 
+                  onReset={handleReset} 
+                />;
       case 'DASHBOARD':
         return <DashboardPage
                     fileName={fileName}

@@ -1,8 +1,10 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import type { ColumnConfig, ParsedFile, RowData } from '../types';
-import { TableIcon, BackIcon, CheckIcon, CloseIcon } from '../components/Icons';
+import { TableIcon, BackIcon, CheckIcon, CloseIcon, BroomIcon } from '../components/Icons';
 import { evaluateFormula } from '../utils/formulaEvaluator';
+import { processData } from '../utils/fileParser';
+import DataCleaningModal from '../components/DataCleaningModal';
 
 interface ConfigurePageProps {
   fileName: string;
@@ -10,7 +12,8 @@ interface ConfigurePageProps {
   selectedSheet: string;
   onSheetSelect: (sheetName: string) => void;
   initialColumnConfig: ColumnConfig[];
-  onConfirm: (config: ColumnConfig[]) => void;
+  currentData?: RowData[]; // New prop to persist data
+  onConfirm: (config: ColumnConfig[], data: RowData[]) => void;
   onReset: () => void;
 }
 
@@ -53,33 +56,54 @@ const DraggableHeader: React.FC<{
   );
 };
 
-const formatDate = (date: Date): string => {
-  const year = date.getFullYear();
-  const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  const day = date.getDate().toString().padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
-
 const ConfigurePage: React.FC<ConfigurePageProps> = ({
   fileName,
   parsedFile,
   selectedSheet,
   onSheetSelect,
   initialColumnConfig,
+  currentData,
   onConfirm,
   onReset,
 }) => {
   const [config, setConfig] = useState<ColumnConfig[]>(initialColumnConfig);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  
+  // "cleanedData" holds the full dataset as RowData objects.
+  const [cleanedData, setCleanedData] = useState<RowData[]>([]);
+  const [isCleaningModalOpen, setIsCleaningModalOpen] = useState(false);
 
   useEffect(() => {
     setConfig(initialColumnConfig);
-  }, [initialColumnConfig]);
+    
+    // If we have existing data (from Dashboard), use it. Otherwise, process raw file.
+    if (currentData && currentData.length > 0) {
+        setCleanedData(currentData);
+    } else if (selectedSheet && parsedFile.sheets[selectedSheet]) {
+        const rawData = parsedFile.sheets[selectedSheet];
+        const initialProcessed = processData(rawData, initialColumnConfig);
+        setCleanedData(initialProcessed);
+    }
+  }, [initialColumnConfig, selectedSheet, parsedFile, currentData]);
 
   const sheetNames = Object.keys(parsedFile.sheets);
 
   const handleLabelChange = (id: string, newLabel: string) => {
+    const oldLabel = config.find(c => c.id === id)?.label;
+    
     setConfig(prev => prev.map(c => c.id === id ? { ...c, label: newLabel } : c));
+
+    // If we rename a column in config, we must also update the keys in our cleanedData objects
+    if (oldLabel && oldLabel !== newLabel) {
+        setCleanedData(prevData => prevData.map(row => {
+            const newRow = { ...row };
+            if (newRow.hasOwnProperty(oldLabel)) {
+                newRow[newLabel] = newRow[oldLabel];
+                delete newRow[oldLabel];
+            }
+            return newRow;
+        }));
+    }
   };
 
   const handleRemoveColumn = (idToRemove: string) => {
@@ -90,7 +114,17 @@ const ConfigurePage: React.FC<ConfigurePageProps> = ({
       alert('This column is used in a calculation and cannot be removed. Please remove the calculated column first.');
       return;
     }
+    
+    const labelToRemove = config.find(c => c.id === idToRemove)?.label;
     setConfig(prev => prev.filter(c => c.id !== idToRemove));
+
+    if (labelToRemove) {
+        setCleanedData(prevData => prevData.map(row => {
+            const newRow = { ...row };
+            delete newRow[labelToRemove];
+            return newRow;
+        }));
+    }
   };
 
   const handleDragStart = (index: number) => {
@@ -109,63 +143,86 @@ const ConfigurePage: React.FC<ConfigurePageProps> = ({
     }
 
     newConfig.splice(draggedIndex, 1);
-    
     const newDropIndex = draggedIndex < dropIndex ? dropIndex - 1 : dropIndex;
-
     newConfig.splice(newDropIndex, 0, draggedItem);
     setConfig(newConfig);
     setDraggedIndex(null);
   };
 
   const previewRows = useMemo(() => {
-    if (!selectedSheet) return [];
-    const rawRows = parsedFile.sheets[selectedSheet].slice(1, 6);
-
-    const originalColumns = config.filter(c => !c.formula);
+    const rowsToPreview = cleanedData.slice(0, 5);
     const calculatedColumns = config.filter(c => c.formula);
 
-    return rawRows.map(rawRow => {
-      const processedRow: RowData = {};
-      
-      originalColumns.forEach(col => {
-        const originalIndex = parseInt(col.id.split('_')[1]);
-        let value = rawRow[originalIndex];
-
-        if (value instanceof Date) {
-            value = formatDate(value);
-        } else if (col.isNumeric) {
-          value = value !== null ? parseFloat(value) : null;
-          if (isNaN(value as number)) value = null;
-        }
-        processedRow[col.id] = value;
-      });
-
-      calculatedColumns.forEach(col => {
-        const formula = col.formula!;
-        const colIdRegex = /\{([^}]+)\}/g;
-        let match;
-        const dependencies = new Set<string>();
-        while ((match = colIdRegex.exec(formula)) !== null) {
-          dependencies.add(match[1]);
-        }
+    return rowsToPreview.map(row => {
+        const processedRow = { ...row };
         
-        const valueMap: Record<string, number> = {};
-        let canCalculate = true;
+        calculatedColumns.forEach(col => {
+            const formula = col.formula!;
+            const colIdRegex = /\{([^}]+)\}/g;
+            let match;
+            const dependencies = new Set<string>();
+            while ((match = colIdRegex.exec(formula)) !== null) {
+                dependencies.add(match[1]);
+            }
+            
+            const valueMap: Record<string, number> = {};
+            let canCalculate = true;
 
-        dependencies.forEach(depId => {
-          const depValue = processedRow[depId];
-          if (typeof depValue === 'number') {
-            valueMap[depId] = depValue;
-          } else {
-            canCalculate = false;
-          }
+            dependencies.forEach(depId => {
+                const depConfig = config.find(c => c.id === depId);
+                if (!depConfig) {
+                    canCalculate = false;
+                    return;
+                }
+                const depValue = processedRow[depConfig.label];
+                if (typeof depValue === 'number') {
+                    valueMap[depId] = depValue;
+                } else {
+                    canCalculate = false;
+                }
+            });
+
+            processedRow[col.label] = canCalculate ? evaluateFormula(formula, valueMap) : null;
         });
-
-        processedRow[col.id] = canCalculate ? evaluateFormula(formula, valueMap) : null;
-      });
-      return processedRow;
+        
+        return processedRow;
     });
-  }, [selectedSheet, parsedFile.sheets, config]);
+
+  }, [cleanedData, config]);
+
+  const handleConfirm = () => {
+    const calculatedColumns = config.filter(c => c.formula);
+    
+    const finalData = cleanedData.map(row => {
+        const processedRow = { ...row };
+        
+        calculatedColumns.forEach(col => {
+            const formula = col.formula!;
+            const colIdRegex = /\{([^}]+)\}/g;
+            let match;
+            const dependencies = new Set<string>();
+            while ((match = colIdRegex.exec(formula)) !== null) {
+                dependencies.add(match[1]);
+            }
+            
+            const valueMap: Record<string, number> = {};
+            let canCalculate = true;
+
+            dependencies.forEach(depId => {
+                const depConfig = config.find(c => c.id === depId);
+                if (!depConfig) return;
+                const depValue = processedRow[depConfig.label];
+                if (typeof depValue === 'number') valueMap[depId] = depValue;
+                else canCalculate = false;
+            });
+
+            processedRow[col.label] = canCalculate ? evaluateFormula(formula, valueMap) : null;
+        });
+        return processedRow;
+    });
+
+    onConfirm(config, finalData);
+  };
 
 
   if (!selectedSheet && sheetNames.length > 1) {
@@ -191,9 +248,17 @@ const ConfigurePage: React.FC<ConfigurePageProps> = ({
   return (
     <>
       <div className="w-full max-w-6xl p-8 bg-[var(--bg-card)] rounded-2xl shadow-lg flex flex-col gap-6">
-          <div>
-              <h2 className="text-2xl font-bold">Configure Your Data</h2>
-              <p className="text-[var(--text-secondary)]">Rename, reorder, or remove columns. This will be the structure for your dashboard.</p>
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+              <div>
+                  <h2 className="text-2xl font-bold">Configure Your Data</h2>
+                  <p className="text-[var(--text-secondary)]">Rename, reorder, or clean columns before visualization.</p>
+              </div>
+              <button 
+                onClick={() => setIsCleaningModalOpen(true)}
+                className="flex items-center gap-2 px-4 py-3 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg transition-colors font-semibold shadow-md"
+              >
+                  <BroomIcon className="w-5 h-5" /> Clean Data
+              </button>
           </div>
 
           <div className="bg-black/10 p-4 rounded-lg">
@@ -214,7 +279,12 @@ const ConfigurePage: React.FC<ConfigurePageProps> = ({
           </div>
 
           <div className="bg-black/10 p-4 rounded-lg overflow-x-auto">
-              <h3 className="font-semibold mb-3 text-lg">Data Preview</h3>
+              <div className="flex justify-between items-center mb-3">
+                  <h3 className="font-semibold text-lg">Data Preview</h3>
+                  <span className="text-xs text-[var(--text-tertiary)]">
+                      Showing first 5 rows of {cleanedData.length}
+                  </span>
+              </div>
               <table className="w-full text-left text-sm">
               <thead>
                   <tr>
@@ -225,7 +295,7 @@ const ConfigurePage: React.FC<ConfigurePageProps> = ({
                   {previewRows.map((row, rowIndex) => (
                     <tr key={rowIndex} className="border-b border-[var(--border-color)]">
                         {config.map(c => {
-                            const value = row[c.id];
+                            const value = row[c.label];
                             const displayValue = typeof value === 'number' ? value.toLocaleString(undefined, {maximumFractionDigits: 3}) : String(value ?? '');
                             return <td key={c.id} className="p-2 truncate max-w-[150px]">{displayValue}</td>
                         })}
@@ -239,11 +309,19 @@ const ConfigurePage: React.FC<ConfigurePageProps> = ({
               <button onClick={onReset} className="flex items-center gap-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
               <BackIcon /> Back
               </button>
-              <button onClick={() => onConfirm(config)} className="flex items-center gap-2 bg-[var(--bg-accent)] hover:bg-[var(--bg-accent-hover)] text-[var(--text-on-accent)] font-bold py-2 px-6 rounded-lg transition-colors">
+              <button onClick={handleConfirm} className="flex items-center gap-2 bg-[var(--bg-accent)] hover:bg-[var(--bg-accent-hover)] text-[var(--text-on-accent)] font-bold py-2 px-6 rounded-lg transition-colors">
               <CheckIcon /> Confirm & Build Dashboard
               </button>
           </div>
       </div>
+
+      <DataCleaningModal 
+        isOpen={isCleaningModalOpen} 
+        onClose={() => setIsCleaningModalOpen(false)}
+        data={cleanedData}
+        columnConfig={config}
+        onSave={setCleanedData}
+      />
     </>
   );
 };

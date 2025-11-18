@@ -101,3 +101,11 @@ export const processData = (rawData: any[][], finalConfig: ColumnConfig[]): RowD
   });
   return data;
 };
+
+// Helper to process a single row given the config, useful for on-the-fly calculations in UI if needed
+export const processRow = (row: any[], config: ColumnConfig[]): RowData => {
+     // This is a simplified version primarily for preview or single-row updates
+     // It relies on the standard processData loop logic, just isolated.
+     // Since processData takes an array of arrays (including header), we can mock it.
+     return processData([[], row], config)[0];
+};

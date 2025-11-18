@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { AnyWidget, WidgetSize, RowData, ColumnConfig, RankWidgetConfig } from '../types';
 import { themes, ThemeName } from '../themes';
 import DashboardCanvas from '../components/DashboardCanvas';
-import { ChartIcon, PlusIcon, ResetIcon, SaveIcon, FolderOpenIcon, KpiIcon, TableIcon, ExportIcon, EyeIcon, CloseIcon, TitleIcon, BackIcon, CalculatorIcon, TextIcon, SparklesIcon, SettingsIcon, PivotIcon, TrophyIcon } from '../components/Icons';
+import { ChartIcon, PlusIcon, ResetIcon, SaveIcon, FolderOpenIcon, KpiIcon, TableIcon, ExportIcon, EyeIcon, CloseIcon, TitleIcon, BackIcon, CalculatorIcon, TextIcon, SparklesIcon, SettingsIcon, PivotIcon, TrophyIcon, BroomIcon } from '../components/Icons';
 import type { Session } from '@supabase/supabase-js';
 import Logo from '../components/Logo';
 import RankModal from '../components/RankModal';
@@ -105,18 +105,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
     const [isExportMenuOpen, setExportMenuOpen] = useState(false);
     const [isRankModalOpen, setIsRankModalOpen] = useState(false);
     
-    // We need to manage the Rank Modal state here or pass a handler up to App.tsx.
-    // Since App.tsx manages all other modals, ideally we should have added it there.
-    // However, based on the architecture, DashboardPage receives generic onAddWidget.
-    // But wait, App.tsx handles the modal open state based on the `type` passed to `onAddWidget`.
-    // Let's check App.tsx...
-    // Ah, I cannot modify App.tsx in this step because I already used my file limit or I can try to squeeze it in?
-    // Wait, the prompt allows me to modify files. I should modify App.tsx to handle the new modal.
-    // But I'll implement the RankModal logic in App.tsx actually.
-    // Re-reading my plan: I didn't list App.tsx in the XML output plan.
-    // I must update App.tsx to include the state for isRankModalOpen.
-    // Let me verify if I can add App.tsx to the changes. Yes I can.
-    
     return (
         <div className="w-full min-h-screen flex flex-col overflow-x-hidden">
             {isPreviewMode && (
@@ -158,8 +146,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                     <EyeIcon /> <span className="hidden sm:inline">Hidden</span> <span className="bg-[var(--bg-accent)] text-[var(--text-on-accent)] text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">{hiddenWidgetsCount}</span>
                   </button>
                 )}
-                 <button data-tooltip="Return to the data configuration screen to rename, reorder, or remove columns." data-tooltip-pos="bottom" onClick={onBackToConfig} disabled={!canGoBackToConfig} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                  <BackIcon /> <span className="hidden sm:inline">Back to Config</span>
+                 <button data-tooltip="Configure columns and clean your data." data-tooltip-pos="bottom" onClick={onBackToConfig} disabled={!canGoBackToConfig} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                  <BroomIcon className="w-4 h-4" /> <span className="hidden sm:inline">Data & Cleaning</span>
                 </button>
                 <button data-tooltip="Clear the current dashboard and start over with a new file or pasted data." data-tooltip-pos="bottom" onClick={onReset} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2">
                   <ResetIcon /> <span className="hidden sm:inline">Start Over</span>
