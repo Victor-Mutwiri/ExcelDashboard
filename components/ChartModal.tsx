@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { ResponsiveContainer, BarChart, Bar, LineChart, Line, PieChart, Pie, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell, ReferenceLine, LabelList } from 'recharts';
 import { Modal } from './Modal';
@@ -304,7 +305,7 @@ const ChartModal: React.FC<ChartModalProps> = ({ isOpen, onClose, data, columnCo
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={isEditing ? "Edit Chart" : "Chart Studio"}>
+    <Modal isOpen={isOpen} onClose={onClose} title={isEditing ? "Edit Chart" : "Chart Studio"} maxWidth="max-w-6xl">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[70vh]">
         {/* Configuration Panel */}
         <div className="md:col-span-1 flex flex-col gap-6 bg-black/10 p-4 rounded-lg overflow-y-auto">

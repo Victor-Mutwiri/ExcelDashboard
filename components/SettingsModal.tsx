@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useEffect } from 'react';
 import { Modal } from './Modal';
 import { AIServiceConfig, AIServiceProvider } from '../types';
@@ -98,7 +99,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onSave, 
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Settings">
+    <Modal isOpen={isOpen} onClose={onClose} title="Settings" maxWidth="max-w-4xl">
       <div className="flex flex-col">
         <div className="flex flex-col md:flex-row gap-x-8 gap-y-4 min-h-[50vh]">
           {/* Left Nav */}

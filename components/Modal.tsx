@@ -7,9 +7,10 @@ interface ModalProps {
     onClose: () => void;
     title: string;
     children: React.ReactNode;
+    maxWidth?: string;
 }
 
-export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
+export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, maxWidth = 'max-w-lg' }) => {
     if (!isOpen) return null;
 
     return (
@@ -18,11 +19,12 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }
             onClick={onClose}
         >
             <div 
-                className="bg-[var(--bg-card)] rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col"
+                className={`bg-[var(--bg-card)] rounded-xl shadow-2xl w-full ${maxWidth} max-h-[90vh] flex flex-col`}
                 onClick={e => e.stopPropagation()}
             >
                 <header className="flex justify-between items-center p-4 border-b border-[var(--border-color)]">
-                    <h2 className="text-xl font-bold">{title}</h2>
+                    <div className="w-6 h-6"></div> {/* Spacer */}
+                    <h2 className="text-xl font-bold text-center flex-grow">{title}</h2>
                     <button onClick={onClose} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
                         <CloseIcon />
                     </button>

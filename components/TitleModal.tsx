@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Modal } from './Modal';
 import { TitleWidgetConfig } from '../types';
@@ -55,7 +56,7 @@ const TitleModal: React.FC<TitleModalProps> = ({ isOpen, onClose, onSave, initia
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={isEditing ? "Edit Report Title" : "Add Report Title"}>
+    <Modal isOpen={isOpen} onClose={onClose} title={isEditing ? "Edit Report Title" : "Add Report Title"} maxWidth="max-w-3xl">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Configuration Panel */}
         <div className="md:col-span-1 flex flex-col gap-4">

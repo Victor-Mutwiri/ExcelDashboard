@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { Modal } from './Modal';
 import { ColumnConfig } from '../types';
@@ -121,7 +122,7 @@ const CalculatedColumnModal: React.FC<CalculatedColumnModalProps> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Create Calculated Column">
+    <Modal isOpen={isOpen} onClose={onClose} title="Create Calculated Column" maxWidth="max-w-3xl">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
           <label htmlFor="new-column-name" className="block text-sm font-medium text-[var(--text-secondary)] mb-1">

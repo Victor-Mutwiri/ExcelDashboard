@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Modal } from './Modal';
 import { SaveIcon } from './Icons';
@@ -35,7 +36,7 @@ const SaveDashboardModal: React.FC<SaveDashboardModalProps> = ({ isOpen, onClose
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Save Dashboard">
+    <Modal isOpen={isOpen} onClose={onClose} title="Save Dashboard" maxWidth="max-w-md">
       <div className="flex flex-col gap-4">
         <div>
           <label htmlFor="dashboard-name" className="block text-sm font-medium text-[var(--text-secondary)] mb-1">

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Modal } from './Modal';
 import { SaveIcon } from './Icons';
@@ -30,7 +31,7 @@ const TitleEditModal: React.FC<TitleEditModalProps> = ({ isOpen, onClose, onSave
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Edit Widget Title">
+    <Modal isOpen={isOpen} onClose={onClose} title="Edit Widget Title" maxWidth="max-w-md">
       <div className="flex flex-col gap-4">
         <div>
           <label htmlFor="widget-title-input" className="block text-sm font-medium text-[var(--text-secondary)] mb-1">

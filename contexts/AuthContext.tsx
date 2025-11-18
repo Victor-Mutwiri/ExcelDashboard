@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
-import { supabase, isSupabaseConfigured } from '../supabaseClient';
+import { supabase } from '../supabaseClient';
 import { Session } from '@supabase/supabase-js';
 
 interface AuthContextType {
@@ -15,12 +15,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // If Supabase is not configured, don't attempt to fetch a session.
-        if (!isSupabaseConfigured || !supabase) {
-            setLoading(false);
-            return;
-        }
-
         const fetchSession = async () => {
             const { data: { session } } = await supabase.auth.getSession();
             setSession(session);
@@ -37,9 +31,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }, []);
 
     const signOut = async () => {
-        if (isSupabaseConfigured && supabase) {
-            await supabase.auth.signOut();
-        }
+        await supabase.auth.signOut();
     };
 
     const value = {

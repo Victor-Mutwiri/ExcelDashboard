@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Modal } from './Modal';
 import { TextWidgetConfig } from '../types';
@@ -35,7 +36,7 @@ const TextModal: React.FC<TextModalProps> = ({ isOpen, onClose, onSave, initialC
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={isEditing ? 'Edit Text Block' : 'Add Text Block'}>
+    <Modal isOpen={isOpen} onClose={onClose} title={isEditing ? 'Edit Text Block' : 'Add Text Block'} maxWidth="max-w-4xl">
       <div className="flex flex-col gap-4">
         <div>
           <label htmlFor="text-title" className="block text-sm font-medium text-[var(--text-secondary)] mb-1">Title</label>

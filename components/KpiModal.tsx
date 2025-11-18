@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { Modal } from './Modal';
 import { ColumnConfig, Computation, KpiWidgetConfig, RowData } from '../types';
@@ -90,7 +91,7 @@ const KpiModal: React.FC<KpiModalProps> = ({ isOpen, onClose, data, numericColum
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Create KPI Card">
+    <Modal isOpen={isOpen} onClose={onClose} title="Create KPI Card" maxWidth="max-w-3xl">
       <div className="flex flex-col gap-6">
         <div>
           <label htmlFor="kpi-title" className="block text-sm font-medium text-[var(--text-secondary)] mb-1">

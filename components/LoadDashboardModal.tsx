@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Modal } from './Modal';
 import { SavedDashboard } from '../types';
@@ -29,7 +30,7 @@ const LoadDashboardModal: React.FC<LoadDashboardModalProps> = ({ isOpen, onClose
     }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Load Dashboard">
+    <Modal isOpen={isOpen} onClose={onClose} title="Load Dashboard" maxWidth="max-w-5xl">
       <div className="flex flex-col gap-4">
         {dashboards.length === 0 ? (
           <div className="text-center text-[var(--text-tertiary)] py-12">
