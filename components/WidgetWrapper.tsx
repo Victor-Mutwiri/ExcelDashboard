@@ -119,7 +119,7 @@ const ChartRenderer: React.FC<{ widget: ChartWidget; data: RowData[]; chartColor
 
   const ChartComponent = { bar: BarChart, line: LineChart, area: AreaChart, pie: PieChart }[effectiveChartType];
   const dataLabelFormatter = (value: number) => value.toLocaleString(undefined, { maximumFractionDigits: 3 });
-  const yAxisDomain = [
+  const yAxisDomain: any = [
     (dataMin: number) => Math.floor(Math.min(0, dataMin) * 1.1),
     (dataMax: number) => Math.ceil(Math.max(0, dataMax) * 1.1)
   ];

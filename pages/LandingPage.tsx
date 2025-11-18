@@ -14,18 +14,63 @@ const CompanyLogo: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     </div>
 );
 
-const QuantumLeapLogo = () => <svg width="100" height="25" viewBox="0 0 100 25" fill="currentColor"><path d="M0 0h100v25H0z" clipRule="evenodd" fillRule="evenodd"/></svg>;
-const StellarSyncLogo = () => <svg width="36" height="30" viewBox="0 0 36 30" fill="currentColor"><path d="M18 0L36 30H0z"/></svg>;
-const ApexInnovateLogo = () => <svg width="40" height="40" viewBox="0 0 40 40" fill="currentColor"><circle cx="20" cy="20" r="20"/></svg>;
-const FusionForwardLogo = () => <svg width="110" height="20" viewBox="0 0 110 20" fill="currentColor"><path d="M0 0h20v20H0zM30 0h80v20H30z"/></svg>;
-const ZenithSolutionsLogo = () => <svg width="50" height="40" viewBox="0 0 50 40" fill="currentColor"><path d="M0 40h50L25 0z"/></svg>;
-const NovaCoreLogo = () => <svg width="30" height="30" viewBox="0 0 30 30" fill="currentColor"><rect width="30" height="30" rx="15"/></svg>;
-const CatalystDynamicsLogo = () => <svg width="120" height="15" viewBox="0 0 120 15" fill="currentColor"><path d="M0 0h120v15H0z"/></svg>;
-const EchoSphereLogo = () => <svg width="32" height="32" viewBox="0 0 32 32" fill="currentColor"><path d="M16 32a16 16 0 100-32 16 16 0 000 32zm0-8a8 8 0 100-16 8 8 0 000 16z"/></svg>;
+// Fortune 500 Company Logos (Simplified SVG representations)
+const OracleLogo = () => (
+  <svg viewBox="0 0 120 30" fill="currentColor" height="25" width="100">
+    <text x="0" y="22" fontFamily="sans-serif" fontWeight="900" fontSize="22" letterSpacing="1">ORACLE</text>
+  </svg>
+);
+
+const CiscoLogo = () => (
+  <svg viewBox="0 0 100 40" fill="currentColor" height="35" width="90">
+    <path d="M10 25v-8h3v8h-3zm6 0v-14h3v14h-3zm6 0v-20h3v20h-3zm6 0v-14h3v14h-3zm6 0v-8h3v8h-3z" />
+    <text x="42" y="25" fontFamily="sans-serif" fontWeight="bold" fontSize="18">CISCO</text>
+  </svg>
+);
+
+const IntelLogo = () => (
+    <svg viewBox="0 0 100 40" fill="currentColor" height="35" width="90">
+        <path d="M5 12 Q 50 -5 95 12" stroke="currentColor" strokeWidth="1.5" fill="none" opacity="0.6"/>
+        <text x="18" y="26" fontFamily="sans-serif" fontWeight="bold" fontSize="22" letterSpacing="-1">intel</text>
+        <path d="M5 28 Q 50 45 95 28" stroke="currentColor" strokeWidth="1.5" fill="none" opacity="0.6"/>
+    </svg>
+);
+
+const PfizerLogo = () => (
+   <svg viewBox="0 0 100 40" fill="currentColor" height="30" width="90">
+        <text x="5" y="28" fontFamily="serif" fontWeight="bold" fontSize="28" fontStyle="italic">Pfizer</text>
+   </svg>
+);
+
+const FedExLogo = () => (
+   <svg viewBox="0 0 100 40" fill="currentColor" height="30" width="90">
+        <text x="0" y="28" fontFamily="sans-serif" fontWeight="900" fontSize="26" letterSpacing="-1">Fed</text>
+        <text x="46" y="28" fontFamily="sans-serif" fontWeight="900" fontSize="26" letterSpacing="-1">Ex</text>
+   </svg>
+);
+
+const ThreeMLogo = () => (
+    <svg viewBox="0 0 60 40" fill="currentColor" height="35" width="60">
+        <text x="0" y="30" fontFamily="sans-serif" fontWeight="900" fontSize="36" letterSpacing="-2">3M</text>
+    </svg>
+);
+
+const HoneywellLogo = () => (
+    <svg viewBox="0 0 140 40" fill="currentColor" height="30" width="120">
+       <text x="0" y="26" fontFamily="sans-serif" fontWeight="800" fontSize="22">Honeywell</text>
+    </svg>
+);
+
+const AdobeLogo = () => (
+    <svg viewBox="0 0 120 40" fill="currentColor" height="35" width="100">
+        <path d="M0 30 L10 5 L20 30 H15 L12 22 H8 L5 30 Z" />
+        <text x="28" y="26" fontFamily="sans-serif" fontWeight="bold" fontSize="22">Adobe</text>
+    </svg>
+);
 
 const logos = [
-    <QuantumLeapLogo />, <StellarSyncLogo />, <ApexInnovateLogo />, <FusionForwardLogo />,
-    <ZenithSolutionsLogo />, <NovaCoreLogo />, <CatalystDynamicsLogo />, <EchoSphereLogo />
+    <OracleLogo />, <CiscoLogo />, <IntelLogo />, <PfizerLogo />,
+    <FedExLogo />, <ThreeMLogo />, <HoneywellLogo />, <AdobeLogo />
 ];
 
 
@@ -86,7 +131,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         {/* "Trusted By" Scroller */}
         <div className="py-12">
             <div className="container mx-auto text-center">
-                <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Trusted by the world's most innovative teams</p>
+                <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Trusted by teams at Fortune 500 companies</p>
                 <div className="mt-8 w-full inline-flex flex-nowrap overflow-hidden [mask-image:_linear-gradient(to_right,transparent_0,_black_48px,_black_calc(100%-48px),transparent_100%)]">
                     <div className="flex items-center justify-center md:justify-start w-max animate-scroll">
                         {logos.map((logo, i) => <CompanyLogo key={i}>{logo}</CompanyLogo>)}
