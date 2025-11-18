@@ -18,6 +18,7 @@ import TitleModal from './components/TitleModal';
 import TextModal from './components/TextModal';
 import SettingsModal from './components/SettingsModal';
 import AIInsightModal from './components/AIInsightModal';
+import AuthModal from './components/AuthModal';
 import Toast from './components/Toast';
 import ManageHiddenWidgetsModal from './components/ManageHiddenWidgetsModal';
 import TitleEditModal from './components/TitleEditModal';
@@ -27,9 +28,11 @@ import { parseFile, processData } from './utils/fileParser';
 import { generateInsight } from './utils/ai';
 import { themes, ThemeName } from './themes';
 import { isPotentiallyNumeric } from './utils/dataCleaner';
+import { useAuth } from './contexts/AuthContext';
 
 
 export default function App() {
+  const { session, signOut } = useAuth();
   const [showLandingPage, setShowLandingPage] = useState(true);
   const [appState, setAppState] = useState<AppState>('UPLOAD');
   const [fileName, setFileName] = useState<string>('');
@@ -52,11 +55,13 @@ export default function App() {
   const [isManageHiddenOpen, setIsManageHiddenOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isTitleEditModalOpen, setIsTitleEditModalOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [editingWidgetId, setEditingWidgetId] = useState<string | null>(null);
 
   // UI States
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const [authActionCallback, setAuthActionCallback] = useState<(() => void) | null>(null);
 
   // Persisted States
   const [savedDashboards, setSavedDashboards] = useState<SavedDashboard[]>([]);
@@ -91,6 +96,24 @@ export default function App() {
     }
   }, []);
   
+  // --- AUTHENTICATION & GATING ---
+  const withAuth = (action: () => void) => {
+    if (session) {
+      action();
+    } else {
+      setAuthActionCallback(() => action);
+      setIsAuthModalOpen(true);
+    }
+  };
+
+  const handleAuthSuccess = () => {
+    setIsAuthModalOpen(false);
+    if (authActionCallback) {
+      authActionCallback();
+      setAuthActionCallback(null);
+    }
+  };
+
   // --- DATA HANDLING & STATE TRANSITIONS ---
   const handleFileUploaded = useCallback(async (file: File) => {
     try {
@@ -306,25 +329,35 @@ export default function App() {
   };
 
   const handleAddWidget = (type: 'chart' | 'kpi' | 'datatable' | 'title' | 'calc' | 'text' | 'ai') => {
-    if (type === 'chart') setIsChartModalOpen(true);
-    else if (type === 'kpi') setIsKpiModalOpen(true);
-    else if (type === 'text') setIsTextModalOpen(true);
-    else if (type === 'ai') setIsAiModalOpen(true);
-    else if (type === 'calc') setIsCalcModalOpen(true);
-    else if (type === 'title') {
-      const existingTitle = widgets.find(w => w.type === 'title');
-      if (existingTitle) setEditingWidgetId(existingTitle.id);
-      setIsTitleModalOpen(true);
-    } else if (type === 'datatable') {
-        const title = `Data Table (${widgets.filter(w => w.type === 'datatable').length + 1})`;
-        setWidgets(prev => [...prev, { id: `datatable-${Date.now()}`, type: 'datatable', size: 'full', title }]);
+    const action = () => {
+        if (type === 'chart') setIsChartModalOpen(true);
+        else if (type === 'kpi') setIsKpiModalOpen(true);
+        else if (type === 'text') setIsTextModalOpen(true);
+        else if (type === 'ai') setIsAiModalOpen(true);
+        else if (type === 'calc') setIsCalcModalOpen(true);
+        else if (type === 'title') {
+          const existingTitle = widgets.find(w => w.type === 'title');
+          if (existingTitle) setEditingWidgetId(existingTitle.id);
+          setIsTitleModalOpen(true);
+        } else if (type === 'datatable') {
+            const title = `Data Table (${widgets.filter(w => w.type === 'datatable').length + 1})`;
+            setWidgets(prev => [...prev, { id: `datatable-${Date.now()}`, type: 'datatable', size: 'full', title }]);
+        }
+    };
+    
+    if (type === 'ai') {
+        withAuth(action);
+    } else {
+        action();
     }
   };
   
   const handleExportPDF = () => {
-    setIsPreviewMode(false);
-    setToast({ message: "Use your browser's print dialog to 'Save as PDF'.", type: 'success' });
-    setTimeout(() => window.print(), 100);
+    withAuth(() => {
+        setIsPreviewMode(false);
+        setToast({ message: "Use your browser's print dialog to 'Save as PDF'.", type: 'success' });
+        setTimeout(() => window.print(), 100);
+    });
   };
 
   // --- DERIVED STATE & MEMOS ---
@@ -347,7 +380,7 @@ export default function App() {
   const renderContent = () => {
     switch (appState) {
       case 'UPLOAD':
-        return <UploadPage onFileUpload={handleFileUploaded} onDataPaste={handleDataPasted} onOpenLoadModal={() => setIsLoadModalOpen(true)} />;
+        return <UploadPage onFileUpload={handleFileUploaded} onDataPaste={handleDataPasted} onOpenLoadModal={() => withAuth(() => setIsLoadModalOpen(true))} />;
       case 'CONFIGURE':
         if (!parsedFile) return null; // Should not happen
         return <ConfigurePage fileName={fileName} parsedFile={parsedFile} selectedSheet={selectedSheet} onSheetSelect={(sheet) => handleSheetSelected(sheet)} initialColumnConfig={columnConfig} onConfirm={handleConfigConfirmed} onReset={handleReset} />;
@@ -361,18 +394,20 @@ export default function App() {
                     theme={theme}
                     isPreviewMode={isPreviewMode}
                     setIsPreviewMode={setIsPreviewMode}
+                    session={session}
+                    onSignOut={signOut}
                     onDeleteWidget={handleDeleteWidget}
                     onUpdateWidgetSize={handleUpdateWidgetSize}
                     onToggleWidgetVisibility={handleToggleWidgetVisibility}
                     onEditWidget={handleEditWidget}
                     onAddWidget={handleAddWidget}
                     onReset={handleReset}
-                    onLoad={() => setIsLoadModalOpen(true)}
-                    onSave={() => setIsSaveModalOpen(true)}
+                    onLoad={() => withAuth(() => setIsLoadModalOpen(true))}
+                    onSave={() => withAuth(() => setIsSaveModalOpen(true))}
                     onBackToConfig={() => setAppState('CONFIGURE')}
                     onShowLandingPage={() => setShowLandingPage(true)}
                     onManageHidden={() => setIsManageHiddenOpen(true)}
-                    onSettings={() => setIsSettingsModalOpen(true)}
+                    onSettings={() => withAuth(() => setIsSettingsModalOpen(true))}
                     onExportPDF={handleExportPDF}
                     hiddenWidgetsCount={hiddenWidgets.length}
                     canGoBackToConfig={canGoBackToConfig}
@@ -399,6 +434,7 @@ export default function App() {
         <SettingsModal isOpen={isSettingsModalOpen} onClose={() => setIsSettingsModalOpen(false)} onSave={handleSaveAiSettings} initialConfigs={aiSettings} currentTheme={theme} onThemeChange={setTheme} />
         <TitleEditModal isOpen={isTitleEditModalOpen} onClose={() => { setIsTitleEditModalOpen(false); setEditingWidgetId(null); }} onSave={handleSaveWidgetTitle} initialTitle={getWidgetTitleForEdit(widgetToEdit)} />
         <ManageHiddenWidgetsModal isOpen={isManageHiddenOpen} onClose={() => setIsManageHiddenOpen(false)} hiddenWidgets={hiddenWidgets} onToggleVisibility={handleToggleWidgetVisibility} />
+        <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onSuccess={handleAuthSuccess} />
         {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       </div>
     </div>

@@ -1,5 +1,6 @@
 {
   "name": "ExcelDashboard",
-  "description": "An interactive dashboard generator. Upload an Excel or CSV file to instantly turn your spreadsheet into a beautiful, interactive dashboard with charts, sorting, and filtering capabilities.",
+  "description": "Turn your spreadsheets into beautiful, interactive dashboards in seconds. Upload an Excel or CSV file, or paste data, to instantly generate charts, tables, and insights. No code required.",
+  "keywords": "excel dashboard, csv dashboard, data visualization, interactive charts, business intelligence, spreadsheet to dashboard, no code data analysis, data dashboard, dashboard generator",
   "requestFramePermissions": []
 }

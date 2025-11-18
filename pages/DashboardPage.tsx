@@ -4,6 +4,7 @@ import { AnyWidget, WidgetSize, RowData, ColumnConfig } from '../types';
 import { themes, ThemeName } from '../themes';
 import DashboardCanvas from '../components/DashboardCanvas';
 import { ChartIcon, PlusIcon, ResetIcon, SaveIcon, FolderOpenIcon, KpiIcon, TableIcon, ExportIcon, EyeIcon, CloseIcon, TitleIcon, BackIcon, CalculatorIcon, TextIcon, SparklesIcon, SettingsIcon } from '../components/Icons';
+import type { Session } from '@supabase/supabase-js';
 
 interface DashboardPageProps {
     fileName: string;
@@ -14,6 +15,8 @@ interface DashboardPageProps {
     theme: ThemeName;
     isPreviewMode: boolean;
     setIsPreviewMode: (isPreview: boolean) => void;
+    session: Session | null;
+    onSignOut: () => void;
     
     // Handlers
     onDeleteWidget: (id: string) => void;
@@ -35,6 +38,38 @@ interface DashboardPageProps {
     canGoBackToConfig: boolean;
 }
 
+const UserMenu: React.FC<{ session: Session; onSettings: () => void; onSignOut: () => void; }> = ({ session, onSettings, onSignOut }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const userInitial = session.user?.email?.[0].toUpperCase() || '?';
+
+    return (
+        <div className="relative">
+            <button 
+                onClick={() => setIsOpen(prev => !prev)}
+                className="w-10 h-10 bg-[var(--bg-accent)] text-[var(--text-on-accent)] rounded-full flex items-center justify-center font-bold text-lg"
+                data-tooltip={`Logged in as ${session.user.email}`}
+            >
+                {userInitial}
+            </button>
+            {isOpen && (
+                <div className="absolute top-full right-0 mt-2 w-56 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg shadow-xl z-20 p-2">
+                    <div className="px-3 py-2 border-b border-[var(--border-color)]">
+                        <p className="text-sm text-[var(--text-secondary)]">Signed in as</p>
+                        <p className="font-semibold truncate">{session.user.email}</p>
+                    </div>
+                    <div className="pt-2">
+                        <button onClick={onSettings} className="w-full text-left flex items-center gap-3 px-3 py-2 hover:bg-[var(--bg-contrast-hover)] rounded-md">
+                            <SettingsIcon /> Settings
+                        </button>
+                        <button onClick={onSignOut} className="w-full text-left flex items-center gap-3 px-3 py-2 text-red-500 hover:bg-red-500/10 rounded-md">
+                           <CloseIcon /> Sign Out
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
 
 const DashboardPage: React.FC<DashboardPageProps> = ({
     fileName,
@@ -45,6 +80,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
     theme,
     isPreviewMode,
     setIsPreviewMode,
+    session,
+    onSignOut,
     onDeleteWidget,
     onUpdateWidgetSize,
     onToggleWidgetVisibility,
@@ -131,9 +168,13 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                         </div>
                     )}
                 </div>
-                <button data-tooltip="Configure dashboard settings, including AI providers and theme." onClick={onSettings} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2">
-                    <SettingsIcon /> Settings
-                </button>
+                {session ? (
+                    <UserMenu session={session} onSettings={onSettings} onSignOut={onSignOut} />
+                ) : (
+                    <button data-tooltip="Configure dashboard settings, including AI providers and theme." onClick={onSettings} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2">
+                        <SettingsIcon /> Settings
+                    </button>
+                )}
               </div>
             </header>
             <main className="flex-grow overflow-y-auto p-4 sm:p-6 lg:p-8 printable-area">

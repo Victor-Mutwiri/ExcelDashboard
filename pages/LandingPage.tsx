@@ -19,12 +19,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                     <TableIcon className="w-8 h-8 text-indigo-400" />
                     <span className="text-2xl font-bold text-white">DataDash</span>
                 </div>
-                <button
-                    onClick={onGetStarted}
-                    className="bg-gray-800/50 hover:bg-gray-700/50 backdrop-blur-sm text-white font-semibold py-2 px-4 rounded-lg transition-colors"
-                >
-                    Get Started
-                </button>
+                <nav>
+                    <button
+                        onClick={onGetStarted}
+                        className="bg-gray-800/50 hover:bg-gray-700/50 backdrop-blur-sm text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                    >
+                        Get Started
+                    </button>
+                </nav>
             </div>
         </header>
 
@@ -47,12 +49,19 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         </main>
 
         {/* Visual Demo */}
-        <section className="px-4">
+        <section className="px-4" aria-labelledby="demo-title">
+            <h2 id="demo-title" className="sr-only">Demonstration of DataDash transforming a spreadsheet into a dashboard.</h2>
             <div className="relative max-w-5xl mx-auto mt-10 p-2 bg-gray-700/20 rounded-xl shadow-2xl ring-1 ring-white/10">
                 <div className="aspect-video bg-gray-800 rounded-lg p-4 flex items-center justify-center">
+                    {/* In a real application, replace this div with an <img> or <video> tag */}
+                    <img 
+                        src="/placeholder-dashboard.svg" // Replace with a real image path
+                        alt="A diagram showing a spreadsheet on the left being transformed into a sleek, colorful dashboard with charts and graphs on the right by the DataDash application."
+                        className="w-full h-full object-contain opacity-50"
+                        style={{ display: 'none' }} // Hide for now, but keep for SEO crawlers and future implementation
+                    />
                     <p className="text-gray-500">
-                        {/* A more descriptive visual placeholder can be added here */}
-                        [Image: A spreadsheet on the left transforming into a sleek dashboard on the right]
+                        [Visual: A spreadsheet transforming into a sleek dashboard]
                     </p>
                 </div>
                  <div className="absolute inset-0 -z-10 bg-indigo-500/10 blur-3xl" aria-hidden="true"></div>
@@ -60,9 +69,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         </section>
 
         {/* Features Section */}
-        <section className="container mx-auto px-6 py-24">
+        <section className="container mx-auto px-6 py-24" aria-labelledby="features-title">
             <div className="text-center mb-12">
-                <h2 className="text-3xl font-bold text-white">Why DataDash is the best choice</h2>
+                <h2 id="features-title" className="text-3xl font-bold text-white">Why DataDash is the best choice</h2>
                 <p className="mt-4 text-gray-400">Everything you need for rapid data analysis and presentation.</p>
             </div>
             <div className="grid md:grid-cols-3 gap-8">
