@@ -188,6 +188,17 @@
   }
 
   @media print {
+    @page {
+      margin: 0; /* Removes default browser header/footer (date, url, etc.) */
+      size: auto;
+    }
+
+    body {
+      margin: 1.5cm !important; /* Add margins back for the content */
+      background-color: white !important;
+      color: black !important;
+    }
+    
     :root, .theme-dark, .theme-corporate {
       --bg-main: #ffffff !important;
       --bg-card: #ffffff !important;
@@ -195,124 +206,161 @@
       --text-secondary: #333333 !important;
       --border-color: #e2e8f0 !important;
     }
-    .widget-card {
-      page-break-inside: avoid;
-      border: none !important;
-      box-shadow: none !important;
-      padding-bottom: 2rem;
+
+    /* Hide standard header/navigation */
+    header, .noprint, .resize-handle-wrapper {
+      display: none !important;
     }
+
+    /* Force Dashboard Canvas to stack vertically */
+    .dashboard-canvas {
+      display: block !important; /* Removes grid layout for vertical stacking */
+      width: 100% !important;
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+
+    /* Widget Card Expansion */
+    .widget-card {
+      width: 100% !important;
+      height: auto !important; /* Allow height to grow based on content */
+      min-height: 0 !important;
+      margin-bottom: 2rem !important; /* Space between stacked widgets */
+      box-shadow: none !important;
+      border: 1px solid #ccc !important;
+      padding-bottom: 1rem !important;
+      break-inside: avoid; /* Try to keep widgets together */
+      page-break-inside: avoid;
+    }
+
     .widget-card > div {
         background-color: transparent !important;
         box-shadow: none !important;
-        border-radius: 0 !important;
-        ring-width: 0 !important;
         border: none !important;
+        height: auto !important;
     }
+
     .widget-card header {
         display: none !important;
     }
+
     .print-title {
       display: block !important;
       text-align: center;
-      font-size: 1.25rem;
+      font-size: 1.4rem;
       font-weight: bold;
       margin-bottom: 1rem;
+      color: black !important;
+      border-bottom: 2px solid #eee;
+      padding-bottom: 0.5rem;
     }
+
     .widget-card main {
         padding: 0 !important;
+        height: auto !important;
+        overflow: visible !important;
     }
+
+    /* Expand all internal scrollable containers */
+    .overflow-y-auto, 
+    .overflow-x-auto, 
+    .overflow-auto,
+    .data-table-scroll-container {
+      overflow: visible !important;
+      height: auto !important;
+      max-height: none !important;
+      width: 100% !important;
+    }
+
+    /* Specific fix for AI Insight Widget content wrapper */
+    .widget-card main > div {
+       height: auto !important;
+       margin: 0 !important; /* Reset negative margins if any */
+    }
+
     .widget-card h3, .widget-card p, .widget-card span, .widget-card text, .widget-card tspan {
-        color: var(--text-primary) !important;
-        fill: var(--text-primary) !important;
+        color: #000 !important;
+        fill: #000 !important;
     }
+
     .recharts-surface, .recharts-wrapper, .recharts-sector, .recharts-cartesian-grid, .recharts-legend-wrapper, .recharts-tooltip-wrapper {
         -webkit-print-color-adjust: exact !important;
         color-adjust: exact !important;
     }
-    .recharts-surface {
+    
+    .recharts-responsive-container {
+        height: 400px !important; /* Fixed height for charts to prevent collapse */
         overflow: visible !important;
     }
-    .noprint {
-      display: none !important;
-    }
-    .data-table-scroll-container {
-      overflow-y: visible !important;
-      height: auto !important;
-    }
-    body * {
-      visibility: hidden;
-    }
-    .printable-area, .printable-area * {
-      visibility: visible;
-    }
-    .printable-area {
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 100%;
-      margin: 0;
-      padding: 0;
+
+    /* Hide scrollbars visually if they persist */
+    ::-webkit-scrollbar {
+      display: none;
     }
   }
 
-  /* Print Preview Mode */
+  /* Print Preview Mode - mimics print styles on screen */
   .print-preview-mode {
-    background-color: #475569; /* A neutral dark background for the preview */
+    background-color: #475569;
   }
   .print-preview-mode .printable-area {
     margin: 2rem auto;
-    width: 210mm; /* A4 width */
-    min-height: 297mm; /* A4 height */
-    padding: 0.5in;
+    width: 210mm;
+    min-height: 297mm;
+    padding: 1.5cm;
     background: white;
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     color: #000;
   }
-  .print-preview-mode .noprint {
+  .print-preview-mode .noprint, 
+  .print-preview-mode .resize-handle-wrapper,
+  .print-preview-mode .widget-card header {
     display: none !important;
   }
-  .print-preview-mode .data-table-scroll-container {
-    overflow-y: visible !important;
-    height: auto !important;
+  .print-preview-mode .dashboard-canvas {
+    display: block !important;
   }
   .print-preview-mode .widget-card {
-    border: none !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin-bottom: 2rem !important;
+    border: 1px solid #ccc !important;
     box-shadow: none !important;
-    padding-bottom: 2rem;
+    padding-bottom: 1rem !important;
   }
   .print-preview-mode .widget-card > div {
     background-color: transparent !important;
     box-shadow: none !important;
-    border-radius: 0 !important;
-    ring-width: 0 !important;
     border: none !important;
-  }
-  .print-preview-mode .widget-card header {
-    display: none !important;
+    height: auto !important;
   }
   .print-preview-mode .print-title {
     display: block !important;
     text-align: center;
-    font-size: 1.25rem;
+    font-size: 1.4rem;
     font-weight: bold;
     margin-bottom: 1rem;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 0.5rem;
   }
   .print-preview-mode .widget-card main {
     padding: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
   }
-  .print-preview-mode .widget-card h3,
-  .print-preview-mode .widget-card p,
-  .print-preview-mode .widget-card span,
-  .print-preview-mode .widget-card text,
-  .print-preview-mode .widget-card tspan {
-      color: #000 !important;
-      fill: #000 !important;
+  .print-preview-mode .widget-card main > div,
+  .print-preview-mode .overflow-y-auto,
+  .print-preview-mode .overflow-x-auto,
+  .print-preview-mode .data-table-scroll-container {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
   }
-  .print-preview-mode .recharts-surface, .print-preview-mode .recharts-wrapper {
-      -webkit-print-color-adjust: exact !important;
-      color-adjust: exact !important;
+  .print-preview-mode .recharts-responsive-container {
+      height: 400px !important;
   }
-
+  
   /* Tooltip Styles */
   [data-tooltip] {
     position: relative;
