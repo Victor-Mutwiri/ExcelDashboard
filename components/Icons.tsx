@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 
 export const UploadIcon: React.FC<React.SVGProps<SVGSVGElement>> = ({ className, ...props }) => (
@@ -17,6 +18,18 @@ export const PivotIcon: React.FC<React.SVGProps<SVGSVGElement>> = ({ className, 
   <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${className || ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
   </svg>
+);
+
+export const TrophyIcon: React.FC<React.SVGProps<SVGSVGElement>> = ({ className, ...props }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${className || ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0V5.625a1.125 1.125 0 00-1.125-1.125h-3.375a1.125 1.125 0 00-1.125 1.125v8.625m0-9.75A2.25 2.25 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8-1.586A2.25 2.25 0 009 2.25H7.5c-1.012 0-1.867.668-2.15 1.586m0 0a2.25 2.25 0 00-2.25 2.25v1.275a7.506 7.506 0 004.68 7.206M21 7.5v1.275a7.506 7.506 0 01-4.68 7.206" />
+  </svg>
+);
+
+export const MedalIcon: React.FC<React.SVGProps<SVGSVGElement>> = ({ className, ...props }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${className || ''}`} viewBox="0 0 20 20" fill="currentColor" {...props}>
+        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+    </svg>
 );
 
 export const BackIcon: React.FC<React.SVGProps<SVGSVGElement>> = ({ className, ...props }) => (

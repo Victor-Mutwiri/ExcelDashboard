@@ -27,7 +27,7 @@ export interface ComputationResult {
 
 // --- WIDGETS ---
 export type WidgetSize = '1/4' | '1/3' | '1/2' | '2/3' | 'full';
-export type WidgetType = 'datatable' | 'chart' | 'kpi' | 'title' | 'text' | 'ai' | 'pivot';
+export type WidgetType = 'datatable' | 'chart' | 'kpi' | 'title' | 'text' | 'ai' | 'pivot' | 'rank';
 
 export interface BaseWidget {
   id: string;
@@ -88,6 +88,20 @@ export interface PivotWidget extends BaseWidget {
   config: PivotWidgetConfig;
 }
 
+// Rank Widget
+export interface RankWidgetConfig {
+  title: string;
+  categoryField: string; // The item name (e.g., Salesperson)
+  valueField: string;    // The metric (e.g., Revenue)
+  aggregation: Computation; // How to sum up duplicate categories
+  limit: number;         // Top N
+  order: 'desc' | 'asc'; // desc = Top performers, asc = Bottom performers
+}
+export interface RankWidget extends BaseWidget {
+  type: 'rank';
+  config: RankWidgetConfig;
+}
+
 // Title Widget
 export interface TitleWidgetConfig {
   text: string;
@@ -133,7 +147,7 @@ export interface AIInsightWidget extends BaseWidget {
 }
 
 
-export type AnyWidget = DataTableWidget | ChartWidget | KpiWidget | TitleWidget | TextWidget | AIInsightWidget | PivotWidget;
+export type AnyWidget = DataTableWidget | ChartWidget | KpiWidget | TitleWidget | TextWidget | AIInsightWidget | PivotWidget | RankWidget;
 // --- END WIDGETS ---
 
 export interface SavedDashboard {

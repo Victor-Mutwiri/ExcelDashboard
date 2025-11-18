@@ -1,6 +1,6 @@
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { AppState, ColumnConfig, RowData, ParsedFile, SavedDashboard, AnyWidget, ChartWidgetConfig, KpiWidgetConfig, WidgetSize, TextWidgetConfig, TitleWidgetConfig, AIServiceConfig, AIInsightWidget, StructuredInsight, PivotWidgetConfig } from './types';
+import { AppState, ColumnConfig, RowData, ParsedFile, SavedDashboard, AnyWidget, ChartWidgetConfig, KpiWidgetConfig, WidgetSize, TextWidgetConfig, TitleWidgetConfig, AIServiceConfig, AIInsightWidget, StructuredInsight, PivotWidgetConfig, RankWidgetConfig } from './types';
 import { Analytics } from "@vercel/analytics/react";
 
 // Page Components
@@ -24,6 +24,7 @@ import Toast from './components/Toast';
 import ManageHiddenWidgetsModal from './components/ManageHiddenWidgetsModal';
 import TitleEditModal from './components/TitleEditModal';
 import PivotModal from './components/PivotModal';
+import RankModal from './components/RankModal';
 
 // Utils and Data
 import { parseFile, processData } from './utils/fileParser';
@@ -69,6 +70,7 @@ export default function App() {
   const [isTextModalOpen, setIsTextModalOpen] = useState(false);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [isPivotModalOpen, setIsPivotModalOpen] = useState(false);
+  const [isRankModalOpen, setIsRankModalOpen] = useState(false);
   const [isManageHiddenOpen, setIsManageHiddenOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isTitleEditModalOpen, setIsTitleEditModalOpen] = useState(false);
@@ -292,6 +294,16 @@ export default function App() {
     setEditingWidgetId(null);
   };
 
+  const handleSaveRank = (config: RankWidgetConfig) => {
+    if (editingWidgetId) {
+        setWidgets(prev => prev.map(w => (w.id === editingWidgetId && w.type === 'rank' ? { ...w, config } : w)));
+    } else {
+        setWidgets(prev => [...prev, { id: `rank-${Date.now()}`, type: 'rank', size: '1/3', config }]);
+    }
+    setIsRankModalOpen(false);
+    setEditingWidgetId(null);
+  };
+
   const handleSaveTitle = (config: TitleWidgetConfig) => {
     const existingTitle = widgets.find(w => w.type === 'title');
     if (existingTitle) {
@@ -361,6 +373,7 @@ export default function App() {
         case 'title': setIsTitleModalOpen(true); break;
         case 'text': setIsTextModalOpen(true); break;
         case 'pivot': setIsPivotModalOpen(true); break;
+        case 'rank': setIsRankModalOpen(true); break;
         case 'datatable': case 'ai': setIsTitleEditModalOpen(true); break;
     }
   };
@@ -377,7 +390,7 @@ export default function App() {
     setEditingWidgetId(null);
   };
 
-  const handleAddWidget = (type: 'chart' | 'kpi' | 'datatable' | 'title' | 'calc' | 'text' | 'ai' | 'pivot') => {
+  const handleAddWidget = (type: 'chart' | 'kpi' | 'datatable' | 'title' | 'calc' | 'text' | 'ai' | 'pivot' | 'rank') => {
     const action = () => {
         if (type === 'chart') setIsChartModalOpen(true);
         else if (type === 'kpi') setIsKpiModalOpen(true);
@@ -385,6 +398,7 @@ export default function App() {
         else if (type === 'ai') setIsAiModalOpen(true);
         else if (type === 'calc') setIsCalcModalOpen(true);
         else if (type === 'pivot') setIsPivotModalOpen(true);
+        else if (type === 'rank') setIsRankModalOpen(true);
         else if (type === 'title') {
           const existingTitle = widgets.find(w => w.type === 'title');
           if (existingTitle) setEditingWidgetId(existingTitle.id);
@@ -483,6 +497,7 @@ export default function App() {
         <TextModal isOpen={isTextModalOpen} onClose={() => { setIsTextModalOpen(false); setEditingWidgetId(null); }} onSave={handleSaveText} initialConfig={widgetToEdit?.type === 'text' ? widgetToEdit.config : undefined} />
         <AIInsightModal isOpen={isAiModalOpen} onClose={() => setIsAiModalOpen(false)} columnConfig={columnConfig} aiSettings={aiSettings} onGenerate={handleGenerateAIInsight} />
         <PivotModal isOpen={isPivotModalOpen} onClose={() => { setIsPivotModalOpen(false); setEditingWidgetId(null); }} columnConfig={columnConfig} onSave={handleSavePivot} initialConfig={widgetToEdit?.type === 'pivot' ? widgetToEdit.config : undefined} />
+        <RankModal isOpen={isRankModalOpen} onClose={() => { setIsRankModalOpen(false); setEditingWidgetId(null); }} columnConfig={columnConfig} onSave={handleSaveRank} initialConfig={widgetToEdit?.type === 'rank' ? widgetToEdit.config : undefined} />
         <CalculatedColumnModal isOpen={isCalcModalOpen} onClose={() => setIsCalcModalOpen(false)} numericColumns={columnConfig.filter(c => c.isNumeric)} existingLabels={columnConfig.map(c => c.label)} onSubmit={handleAddCalculatedColumn} />
         <KpiModal isOpen={isKpiModalOpen} onClose={() => setIsKpiModalOpen(false)} data={data} numericColumns={columnConfig.filter(c => c.isNumeric)} onSubmit={handleAddKpi} />
         <LoadDashboardModal isOpen={isLoadModalOpen} onClose={() => setIsLoadModalOpen(false)} dashboards={savedDashboards} onLoad={handleLoadDashboard} onDelete={handleDeleteDashboard} />

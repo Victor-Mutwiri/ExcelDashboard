@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useRef } from 'react';
 import { ResponsiveContainer, BarChart, Bar, LineChart, Line, PieChart, Pie, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell, ReferenceLine, TooltipProps, LabelList } from 'recharts';
-import { AnyWidget, RowData, ColumnConfig, WidgetSize, ChartWidget, KpiWidget, TitleWidget, DataTableWidget, TextWidget, AIInsightWidget, PivotWidget } from '../types';
+import { AnyWidget, RowData, ColumnConfig, WidgetSize, ChartWidget, KpiWidget, TitleWidget, DataTableWidget, TextWidget, AIInsightWidget, PivotWidget, RankWidget } from '../types';
 import { DragHandleIcon, EllipsisVerticalIcon, TrashIcon, EyeOffIcon, PencilIcon } from './Icons';
 import DataTable from './DataTable';
 import KpiWidgetComponent from './KpiWidget';
@@ -9,6 +9,7 @@ import MarkdownRenderer from './MarkdownRenderer';
 import { professionalFonts } from './TitleModal';
 import AIInsightWidgetComponent from './AIInsightWidgetComponent';
 import PivotTableWidget from './PivotTableWidget';
+import RankWidgetComponent from './RankWidget';
 
 interface WidgetWrapperProps {
   widget: AnyWidget;
@@ -315,6 +316,8 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = ({ widget, data, columnConfi
         return <AIInsightWidgetComponent widget={widget as AIInsightWidget} />;
       case 'pivot':
         return <PivotTableWidget widget={widget as PivotWidget} data={data} />;
+      case 'rank':
+        return <RankWidgetComponent widget={widget as RankWidget} data={data} />;
       default:
         return null;
     }
@@ -327,7 +330,7 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = ({ widget, data, columnConfi
   }
   const title = getTitle(widget);
 
-  const canEdit = ['chart', 'title', 'text', 'datatable', 'ai', 'pivot'].includes(widget.type);
+  const canEdit = ['chart', 'title', 'text', 'datatable', 'ai', 'pivot', 'rank'].includes(widget.type);
 
   return (
     <div

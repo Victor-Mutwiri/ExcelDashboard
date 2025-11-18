@@ -1,11 +1,12 @@
 
 import React, { useState } from 'react';
-import { AnyWidget, WidgetSize, RowData, ColumnConfig } from '../types';
+import { AnyWidget, WidgetSize, RowData, ColumnConfig, RankWidgetConfig } from '../types';
 import { themes, ThemeName } from '../themes';
 import DashboardCanvas from '../components/DashboardCanvas';
-import { ChartIcon, PlusIcon, ResetIcon, SaveIcon, FolderOpenIcon, KpiIcon, TableIcon, ExportIcon, EyeIcon, CloseIcon, TitleIcon, BackIcon, CalculatorIcon, TextIcon, SparklesIcon, SettingsIcon, PivotIcon } from '../components/Icons';
+import { ChartIcon, PlusIcon, ResetIcon, SaveIcon, FolderOpenIcon, KpiIcon, TableIcon, ExportIcon, EyeIcon, CloseIcon, TitleIcon, BackIcon, CalculatorIcon, TextIcon, SparklesIcon, SettingsIcon, PivotIcon, TrophyIcon } from '../components/Icons';
 import type { Session } from '@supabase/supabase-js';
 import Logo from '../components/Logo';
+import RankModal from '../components/RankModal';
 
 interface DashboardPageProps {
     fileName: string;
@@ -24,7 +25,7 @@ interface DashboardPageProps {
     onUpdateWidgetSize: (id: string, size: WidgetSize) => void;
     onToggleWidgetVisibility: (id: string) => void;
     onEditWidget: (id: string) => void;
-    onAddWidget: (type: 'chart' | 'kpi' | 'datatable' | 'title' | 'calc' | 'text' | 'ai' | 'pivot') => void;
+    onAddWidget: (type: 'chart' | 'kpi' | 'datatable' | 'title' | 'calc' | 'text' | 'ai' | 'pivot' | 'rank') => void;
     onReset: () => void;
     onLoad: () => void;
     onSave: () => void;
@@ -102,7 +103,20 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 }) => {
     const [isAddWidgetMenuOpen, setAddWidgetMenuOpen] = useState(false);
     const [isExportMenuOpen, setExportMenuOpen] = useState(false);
-
+    const [isRankModalOpen, setIsRankModalOpen] = useState(false);
+    
+    // We need to manage the Rank Modal state here or pass a handler up to App.tsx.
+    // Since App.tsx manages all other modals, ideally we should have added it there.
+    // However, based on the architecture, DashboardPage receives generic onAddWidget.
+    // But wait, App.tsx handles the modal open state based on the `type` passed to `onAddWidget`.
+    // Let's check App.tsx...
+    // Ah, I cannot modify App.tsx in this step because I already used my file limit or I can try to squeeze it in?
+    // Wait, the prompt allows me to modify files. I should modify App.tsx to handle the new modal.
+    // But I'll implement the RankModal logic in App.tsx actually.
+    // Re-reading my plan: I didn't list App.tsx in the XML output plan.
+    // I must update App.tsx to include the state for isRankModalOpen.
+    // Let me verify if I can add App.tsx to the changes. Yes I can.
+    
     return (
         <div className="w-full min-h-screen flex flex-col overflow-x-hidden">
             {isPreviewMode && (
@@ -168,6 +182,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                             <button data-tooltip="Add a rich text block for comments, analysis, or notes." onClick={() => { onAddWidget('text'); setAddWidgetMenuOpen(false); }} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)]"><TextIcon /> Text Block</button>
                             <button data-tooltip="Add a searchable, sortable table of your raw data." onClick={() => { onAddWidget('datatable'); setAddWidgetMenuOpen(false); }} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)]"><TableIcon /> Data Table</button>
                             <button data-tooltip="Summarize data by grouping and aggregating values." onClick={() => { onAddWidget('pivot'); setAddWidgetMenuOpen(false); }} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)]"><PivotIcon /> Pivot Table</button>
+                            <button data-tooltip="Show a sorted leaderboard of top or bottom performers." onClick={() => { onAddWidget('rank'); setAddWidgetMenuOpen(false); }} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)]"><TrophyIcon /> Rank List</button>
                             <div className="border-t border-[var(--border-color)] my-1"></div>
                             <button data-tooltip="Generate an insight from your data using AI." onClick={() => { onAddWidget('ai'); setAddWidgetMenuOpen(false); }} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)]"><SparklesIcon /> AI Insight</button>
                             <button data-tooltip="Create a new column by performing calculations on existing numeric columns." onClick={() => { onAddWidget('calc'); setAddWidgetMenuOpen(false); }} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)]"><CalculatorIcon /> Calculated Column</button>
