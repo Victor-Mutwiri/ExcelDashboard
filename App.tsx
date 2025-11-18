@@ -31,18 +31,32 @@ import { themes, ThemeName } from './themes';
 import { isPotentiallyNumeric } from './utils/dataCleaner';
 import { useAuth } from './contexts/AuthContext';
 
+const SESSION_STORAGE_KEY = 'sheetsight_active_session';
 
 export default function App() {
   const { session, signOut } = useAuth();
-  const [showLandingPage, setShowLandingPage] = useState(true);
-  const [appState, setAppState] = useState<AppState>('UPLOAD');
-  const [fileName, setFileName] = useState<string>('');
-  const [parsedFile, setParsedFile] = useState<ParsedFile | null>(null);
-  const [selectedSheet, setSelectedSheet] = useState<string>('');
+
+  // Load saved session once on mount (lazy initialization)
+  const [initialSession] = useState(() => {
+    try {
+      const stored = localStorage.getItem(SESSION_STORAGE_KEY);
+      return stored ? JSON.parse(stored) : null;
+    } catch (err) {
+      console.error('Failed to load session from local storage:', err);
+      return null;
+    }
+  });
+
+  // Initialize states with saved values or defaults
+  const [showLandingPage, setShowLandingPage] = useState<boolean>(initialSession?.showLandingPage ?? true);
+  const [appState, setAppState] = useState<AppState>(initialSession?.appState ?? 'UPLOAD');
+  const [fileName, setFileName] = useState<string>(initialSession?.fileName ?? '');
+  const [parsedFile, setParsedFile] = useState<ParsedFile | null>(initialSession?.parsedFile ?? null);
+  const [selectedSheet, setSelectedSheet] = useState<string>(initialSession?.selectedSheet ?? '');
   
-  const [columnConfig, setColumnConfig] = useState<ColumnConfig[]>([]);
-  const [data, setData] = useState<RowData[]>([]);
-  const [widgets, setWidgets] = useState<AnyWidget[]>([]);
+  const [columnConfig, setColumnConfig] = useState<ColumnConfig[]>(initialSession?.columnConfig ?? []);
+  const [data, setData] = useState<RowData[]>(initialSession?.data ?? []);
+  const [widgets, setWidgets] = useState<AnyWidget[]>(initialSession?.widgets ?? []);
 
   // Modal States
   const [isChartModalOpen, setIsChartModalOpen] = useState(false);
@@ -70,6 +84,26 @@ export default function App() {
   const [theme, setTheme] = useState<ThemeName>(() => {
     return (localStorage.getItem('dashboard-theme') as ThemeName) || 'light';
   });
+
+  // Effect for Session Persistence
+  useEffect(() => {
+    const sessionData = {
+      showLandingPage,
+      appState,
+      fileName,
+      parsedFile,
+      selectedSheet,
+      columnConfig,
+      data,
+      widgets
+    };
+
+    try {
+      localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionData));
+    } catch (e) {
+      console.warn('Failed to save session to local storage (possibly quota exceeded):', e);
+    }
+  }, [showLandingPage, appState, fileName, parsedFile, selectedSheet, columnConfig, data, widgets]);
 
   // Effect for Print Preview
   useEffect(() => {
@@ -116,6 +150,7 @@ export default function App() {
   }, [authActionCallback]);
 
   const handleReset = useCallback(() => {
+    localStorage.removeItem(SESSION_STORAGE_KEY);
     setAppState('UPLOAD');
     setFileName('');
     setParsedFile(null);

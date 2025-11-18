@@ -1,3 +1,4 @@
+
 import * as XLSX from 'xlsx';
 import type { ColumnConfig, RowData, ParsedFile } from '../types';
 import { evaluateFormula } from './formulaEvaluator';
@@ -55,6 +56,12 @@ export const processData = (rawData: any[][], finalConfig: ColumnConfig[]): RowD
       
       if (value instanceof Date) {
         value = formatDate(value);
+      } else if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(value)) {
+         // Handle ISO strings from JSON restoration
+         const dateObj = new Date(value);
+         if (!isNaN(dateObj.getTime())) {
+             value = formatDate(dateObj);
+         }
       } else if (config.isNumeric) {
         value = parseNumericValue(value);
       }
