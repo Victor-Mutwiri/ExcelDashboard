@@ -114,40 +114,51 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                 </div>
             )}
             <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 noprint bg-[var(--bg-header)] theme-corporate:text-white px-4 sm:px-6 lg:px-8 py-4 border-b border-[var(--border-color)] shadow-sm">
-              <div className="flex items-center gap-4">
-                <button onClick={onShowLandingPage} className="flex items-center gap-2 group" data-tooltip="Back to Home Page" data-tooltip-pos="bottom">
-                  <Logo className="w-8 h-8 text-[var(--color-accent)] transition-transform group-hover:scale-110" />
-                  <span className="text-lg font-bold">
-                    <span style={{ color: 'var(--logo-color-sheet)' }}>Sheet</span>
-                    <span style={{ color: 'var(--logo-color-sight)' }}>Sight</span>
-                  </span>
-                </button>
-                <div className="border-l border-[var(--border-color-heavy)] pl-4">
-                  <h1 className="text-xl font-bold leading-tight">{fileName}</h1>
-                  <p className="text-sm text-[var(--text-secondary)]">Interactive Dashboard</p>
+              <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-start">
+                <div className="flex items-center gap-4">
+                    <button onClick={onShowLandingPage} className="flex items-center gap-2 group" data-tooltip="Back to Home Page" data-tooltip-pos="bottom">
+                    <Logo className="w-8 h-8 text-[var(--color-accent)] transition-transform group-hover:scale-110" />
+                    <span className="text-lg font-bold">
+                        <span style={{ color: 'var(--logo-color-sheet)' }}>Sheet</span>
+                        <span style={{ color: 'var(--logo-color-sight)' }}>Sight</span>
+                    </span>
+                    </button>
+                    <div className="border-l border-[var(--border-color-heavy)] pl-4 hidden sm:block">
+                    <h1 className="text-xl font-bold leading-tight max-w-[200px] truncate">{fileName}</h1>
+                    <p className="text-sm text-[var(--text-secondary)]">Interactive Dashboard</p>
+                    </div>
+                </div>
+                <div className="sm:hidden">
+                     {session ? (
+                        <UserMenu session={session} onSettings={onSettings} onSignOut={onSignOut} />
+                    ) : (
+                        <button onClick={onSettings} className="p-2 text-[var(--text-secondary)] hover:bg-[var(--bg-contrast)] rounded-full">
+                            <SettingsIcon />
+                        </button>
+                    )}
                 </div>
               </div>
-              <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-end">
                 {hiddenWidgetsCount > 0 && (
                   <button data-tooltip="View and restore widgets you've hidden from the dashboard." data-tooltip-pos="bottom" onClick={onManageHidden} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2">
-                    <EyeIcon /> Hidden <span className="bg-[var(--bg-accent)] text-[var(--text-on-accent)] text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">{hiddenWidgetsCount}</span>
+                    <EyeIcon /> <span className="hidden sm:inline">Hidden</span> <span className="bg-[var(--bg-accent)] text-[var(--text-on-accent)] text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">{hiddenWidgetsCount}</span>
                   </button>
                 )}
                  <button data-tooltip="Return to the data configuration screen to rename, reorder, or remove columns." data-tooltip-pos="bottom" onClick={onBackToConfig} disabled={!canGoBackToConfig} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                  <BackIcon /> Back to Config
+                  <BackIcon /> <span className="hidden sm:inline">Back to Config</span>
                 </button>
                 <button data-tooltip="Clear the current dashboard and start over with a new file or pasted data." data-tooltip-pos="bottom" onClick={onReset} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2">
-                  <ResetIcon /> Start Over
+                  <ResetIcon /> <span className="hidden sm:inline">Start Over</span>
                 </button>
                  <button data-tooltip="Load a previously saved dashboard session." data-tooltip-pos="bottom" onClick={onLoad} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2">
-                  <FolderOpenIcon /> Load
+                  <FolderOpenIcon /> <span className="hidden sm:inline">Load</span>
                 </button>
                 <button data-tooltip="Save your current dashboard layout, widgets, and data." data-tooltip-pos="bottom" onClick={onSave} className="px-4 py-2 text-sm font-semibold text-[var(--text-on-accent)] bg-[var(--bg-accent)] hover:bg-[var(--bg-accent-hover)] rounded-lg flex items-center gap-2">
-                  <SaveIcon /> Save
+                  <SaveIcon /> <span className="hidden sm:inline">Save</span>
                 </button>
                 <div className="relative">
                     <button data-tooltip="Add a new widget to your dashboard." data-tooltip-pos="bottom" onClick={() => setAddWidgetMenuOpen(prev => !prev)} className="px-4 py-2 text-sm font-semibold text-white bg-green-600 hover:bg-green-500 rounded-lg flex items-center gap-2">
-                        <PlusIcon /> Add
+                        <PlusIcon /> <span className="hidden sm:inline">Add</span>
                     </button>
                     {isAddWidgetMenuOpen && (
                         <div className="absolute top-full right-0 mt-2 w-56 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg shadow-xl z-20">
@@ -164,7 +175,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                 </div>
                  <div className="relative">
                     <button data-tooltip="Export your dashboard." data-tooltip-pos="bottom" onClick={() => setExportMenuOpen(prev => !prev)} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2">
-                        <ExportIcon /> Export
+                        <ExportIcon /> <span className="hidden sm:inline">Export</span>
                     </button>
                     {isExportMenuOpen && (
                         <div className="absolute top-full right-0 mt-2 w-48 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg shadow-xl z-20">
@@ -173,13 +184,15 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                         </div>
                     )}
                 </div>
-                {session ? (
-                    <UserMenu session={session} onSettings={onSettings} onSignOut={onSignOut} />
-                ) : (
-                    <button data-tooltip="Configure dashboard settings, including AI providers and theme." data-tooltip-pos="bottom" onClick={onSettings} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2">
-                        <SettingsIcon /> Settings
-                    </button>
-                )}
+                <div className="hidden sm:block">
+                    {session ? (
+                        <UserMenu session={session} onSettings={onSettings} onSignOut={onSignOut} />
+                    ) : (
+                        <button data-tooltip="Configure dashboard settings, including AI providers and theme." data-tooltip-pos="bottom" onClick={onSettings} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2">
+                            <SettingsIcon /> <span className="hidden sm:inline">Settings</span>
+                        </button>
+                    )}
+                </div>
               </div>
             </header>
             <main className="flex-grow overflow-y-auto p-4 sm:p-6 lg:p-8 printable-area">

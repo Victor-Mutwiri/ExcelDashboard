@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { KpiWidget, RowData, ColumnConfig } from '../types';
 import { calculateKpiValue } from '../utils/kpiEvaluator';
@@ -22,7 +23,7 @@ const KpiWidgetComponent: React.FC<KpiWidgetComponentProps> = ({ widget, data, c
   return (
     <div className="flex flex-col justify-center items-center text-center h-full">
       <h4 className="text-base text-[var(--text-secondary)] font-semibold truncate">{config.title}</h4>
-      <p className="text-3xl sm:text-4xl font-bold text-[var(--color-accent)] mt-1">{displayValue}</p>
+      <p className="text-2xl sm:text-4xl font-bold text-[var(--color-accent)] mt-1 break-all">{displayValue}</p>
       <p className="text-sm text-[var(--text-tertiary)] mt-2">{config.computation}</p>
     </div>
   );

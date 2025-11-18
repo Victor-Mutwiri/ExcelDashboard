@@ -59,7 +59,7 @@ const TitleRenderer: React.FC<{ widget: TitleWidget }> = ({ widget }) => {
         className="w-full"
         style={{
           fontFamily: professionalFonts[fontFamily as keyof typeof professionalFonts],
-          fontSize: `${fontSize}px`,
+          fontSize: `min(${fontSize}px, 12vw)`,
           textAlign: textAlign,
           color: 'var(--text-primary)',
           wordBreak: 'break-word',
@@ -330,7 +330,7 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = ({ widget, data, columnConfi
       onDragOver={(e) => e.preventDefault()}
     >
       <div className="bg-[var(--bg-card)] rounded-xl h-full flex flex-col ring-1 ring-black/5 shadow-md relative">
-        <header className="flex items-center p-4 border-b border-[var(--border-color)]">
+        <header className="flex items-center p-3 md:p-4 border-b border-[var(--border-color)]">
           <div className="w-8 flex-shrink-0">
             {widget.type !== 'title' && (
               <div className="cursor-grab" onMouseDown={(e) => e.stopPropagation()} data-tooltip="Drag to reorder this widget on the dashboard.">
@@ -374,7 +374,7 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = ({ widget, data, columnConfi
             )}
           </div>
         </header>
-        <main className="p-4 flex-grow min-h-0">
+        <main className="p-3 md:p-4 flex-grow min-h-0">
           {renderContent()}
         </main>
 
@@ -391,7 +391,7 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = ({ widget, data, columnConfi
       </div>
       {widget.type !== 'title' && (
         <div
-          className="resize-handle-wrapper noprint"
+          className="resize-handle-wrapper noprint hidden md:block"
           onMouseDown={handleResizeMouseDown}
           onClick={(e) => e.stopPropagation()}
         >

@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { AnyWidget, RowData, ColumnConfig, WidgetSize } from '../types';
 import WidgetWrapper from './WidgetWrapper';
@@ -53,7 +54,7 @@ const DashboardCanvas: React.FC<DashboardCanvasProps> = ({
   const visibleWidgets = widgets.filter(w => !w.isHidden);
 
   return (
-    <div ref={canvasRef} className="grid grid-cols-12 gap-6">
+    <div ref={canvasRef} className="grid grid-cols-12 gap-4 md:gap-6 pb-8 md:pb-0">
       {visibleWidgets.map((widget) => (
         <WidgetWrapper
           key={widget.id}
