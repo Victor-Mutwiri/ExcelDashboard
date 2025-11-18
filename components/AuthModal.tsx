@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from './Modal';
 import { supabase } from '../supabaseClient';
-import { EyeIcon, EyeOffIcon, MailIcon, LockClosedIcon, ClockIcon, BackIcon } from './Icons';
+import { EyeIcon, EyeOffIcon, MailIcon, LockClosedIcon, ClockIcon, BackIcon, CheckCircleIcon } from './Icons';
+import confetti from 'canvas-confetti';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -53,6 +54,45 @@ const checkOtpRateLimit = (email: string): { allowed: boolean; message: string }
 };
 // --- End Rate Limiting Helpers ---
 
+const WelcomeView: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
+    useEffect(() => {
+        const duration = 3 * 1000;
+        const animationEnd = Date.now() + duration;
+        const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+        const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+
+        const interval: any = setInterval(function() {
+          const timeLeft = animationEnd - Date.now();
+
+          if (timeLeft <= 0) {
+            return clearInterval(interval);
+          }
+
+          const particleCount = 50 * (timeLeft / duration);
+          confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+          confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+        }, 250);
+
+        return () => clearInterval(interval);
+    }, []);
+
+    return (
+        <div className="flex flex-col items-center justify-center text-center p-6">
+            <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-6 animate-bounce">
+                <CheckCircleIcon className="w-12 h-12" />
+            </div>
+            <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-2">Welcome to SheetSight!</h2>
+            <p className="text-[var(--text-secondary)] mb-8">Your account has been successfully created. You're all set to start building amazing dashboards.</p>
+            <button 
+                onClick={onSuccess} 
+                className="w-full py-3 px-4 bg-[var(--bg-accent)] hover:bg-[var(--bg-accent-hover)] text-[var(--text-on-accent)] rounded-lg transition-colors font-semibold shadow-lg shadow-indigo-500/20 transform hover:scale-105 duration-200"
+            >
+                Get Started
+            </button>
+        </div>
+    );
+};
 
 const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => {
   const [view, setView] = useState<AuthView>('signIn');
@@ -63,6 +103,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(0);
+  const [showWelcome, setShowWelcome] = useState(false);
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | null = null;
@@ -85,6 +126,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
     setView('signIn');
     setLoading(false);
     setCountdown(0);
+    setShowWelcome(false);
     onClose();
   };
 
@@ -93,11 +135,16 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
     setLoading(true);
     setError(null);
     try {
-      const response = view === 'signUp'
-        ? await supabase.auth.signUp({ email, password })
-        : await supabase.auth.signInWithPassword({ email, password });
-      if (response.error) throw response.error;
-      onSuccess();
+      if (view === 'signUp') {
+        const response = await supabase.auth.signUp({ email, password });
+        if (response.error) throw response.error;
+        // Instead of closing, show welcome screen
+        setShowWelcome(true);
+      } else {
+        const response = await supabase.auth.signInWithPassword({ email, password });
+        if (response.error) throw response.error;
+        onSuccess();
+      }
     } catch (err: any) {
       setError(err.message || 'An unexpected error occurred.');
     } finally {
@@ -232,6 +279,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
   );
 
   const renderContent = () => {
+    if (showWelcome) return <WelcomeView onSuccess={onSuccess} />;
+
     switch (view) {
         case 'signIn': return renderSignIn();
         case 'signUp': return renderSignUp();
@@ -241,6 +290,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
   };
   
   const getModalTitle = () => {
+    if (showWelcome) return '';
     switch(view) {
         case 'signIn': return 'Sign In';
         case 'signUp': return 'Create Account';
@@ -252,7 +302,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title={getModalTitle()} maxWidth="max-w-md">
       <div className="w-full">
-        {view !== 'forgotPassword' && view !== 'enterOtp' && (
+        {!showWelcome && view !== 'forgotPassword' && view !== 'enterOtp' && (
             <div className="flex justify-center border-b border-[var(--border-color)] mb-6">
                 <button onClick={() => { setView('signIn'); setError(null); }} className={`px-6 py-2 font-semibold transition-colors ${view === 'signIn' ? 'text-[var(--color-accent)] border-b-2 border-[var(--color-accent)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}>
                     Sign In
@@ -263,7 +313,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
             </div>
         )}
         
-        {error && (
+        {error && !showWelcome && (
             <div className="mb-4 text-center p-2 bg-red-500/10 text-red-500 rounded-md text-sm font-medium">
                 {error}
             </div>
