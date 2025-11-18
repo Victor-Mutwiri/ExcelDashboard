@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { AnyWidget, WidgetSize, RowData, ColumnConfig } from '../types';
 import { themes, ThemeName } from '../themes';
 import DashboardCanvas from '../components/DashboardCanvas';
-import { ChartIcon, PlusIcon, ResetIcon, SaveIcon, FolderOpenIcon, KpiIcon, TableIcon, ExportIcon, EyeIcon, CloseIcon, TitleIcon, BackIcon, CalculatorIcon, TextIcon, SparklesIcon, SettingsIcon } from '../components/Icons';
+import { ChartIcon, PlusIcon, ResetIcon, SaveIcon, FolderOpenIcon, KpiIcon, TableIcon, ExportIcon, EyeIcon, CloseIcon, TitleIcon, BackIcon, CalculatorIcon, TextIcon, SparklesIcon, SettingsIcon, PivotIcon } from '../components/Icons';
 import type { Session } from '@supabase/supabase-js';
 import Logo from '../components/Logo';
 
@@ -24,7 +24,7 @@ interface DashboardPageProps {
     onUpdateWidgetSize: (id: string, size: WidgetSize) => void;
     onToggleWidgetVisibility: (id: string) => void;
     onEditWidget: (id: string) => void;
-    onAddWidget: (type: 'chart' | 'kpi' | 'datatable' | 'title' | 'calc' | 'text' | 'ai') => void;
+    onAddWidget: (type: 'chart' | 'kpi' | 'datatable' | 'title' | 'calc' | 'text' | 'ai' | 'pivot') => void;
     onReset: () => void;
     onLoad: () => void;
     onSave: () => void;
@@ -167,6 +167,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                             <button data-tooltip="Visualize your data with bar, line, area, or pie charts." onClick={() => { onAddWidget('chart'); setAddWidgetMenuOpen(false); }} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)]"><ChartIcon /> Chart</button>
                             <button data-tooltip="Add a rich text block for comments, analysis, or notes." onClick={() => { onAddWidget('text'); setAddWidgetMenuOpen(false); }} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)]"><TextIcon /> Text Block</button>
                             <button data-tooltip="Add a searchable, sortable table of your raw data." onClick={() => { onAddWidget('datatable'); setAddWidgetMenuOpen(false); }} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)]"><TableIcon /> Data Table</button>
+                            <button data-tooltip="Summarize data by grouping and aggregating values." onClick={() => { onAddWidget('pivot'); setAddWidgetMenuOpen(false); }} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)]"><PivotIcon /> Pivot Table</button>
                             <div className="border-t border-[var(--border-color)] my-1"></div>
                             <button data-tooltip="Generate an insight from your data using AI." onClick={() => { onAddWidget('ai'); setAddWidgetMenuOpen(false); }} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)]"><SparklesIcon /> AI Insight</button>
                             <button data-tooltip="Create a new column by performing calculations on existing numeric columns." onClick={() => { onAddWidget('calc'); setAddWidgetMenuOpen(false); }} className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-[var(--bg-contrast-hover)]"><CalculatorIcon /> Calculated Column</button>

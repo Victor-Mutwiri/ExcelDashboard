@@ -1,3 +1,4 @@
+
 export type AppState = 'UPLOAD' | 'CONFIGURE' | 'DASHBOARD';
 
 export interface ColumnConfig {
@@ -26,7 +27,7 @@ export interface ComputationResult {
 
 // --- WIDGETS ---
 export type WidgetSize = '1/4' | '1/3' | '1/2' | '2/3' | 'full';
-export type WidgetType = 'datatable' | 'chart' | 'kpi' | 'title' | 'text' | 'ai';
+export type WidgetType = 'datatable' | 'chart' | 'kpi' | 'title' | 'text' | 'ai' | 'pivot';
 
 export interface BaseWidget {
   id: string;
@@ -74,6 +75,19 @@ export interface DataTableWidget extends BaseWidget {
   title: string;
 }
 
+// Pivot Table Widget
+export interface PivotWidgetConfig {
+  title: string;
+  rowFields: string[];    // Fields to group by vertically
+  colFields: string[];    // Fields to group by horizontally
+  valueField: string;     // Field to aggregate
+  aggregation: Computation;
+}
+export interface PivotWidget extends BaseWidget {
+  type: 'pivot';
+  config: PivotWidgetConfig;
+}
+
 // Title Widget
 export interface TitleWidgetConfig {
   text: string;
@@ -119,7 +133,7 @@ export interface AIInsightWidget extends BaseWidget {
 }
 
 
-export type AnyWidget = DataTableWidget | ChartWidget | KpiWidget | TitleWidget | TextWidget | AIInsightWidget;
+export type AnyWidget = DataTableWidget | ChartWidget | KpiWidget | TitleWidget | TextWidget | AIInsightWidget | PivotWidget;
 // --- END WIDGETS ---
 
 export interface SavedDashboard {
