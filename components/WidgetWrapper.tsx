@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useRef } from 'react';
 import { ResponsiveContainer, BarChart, Bar, LineChart, Line, PieChart, Pie, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell, ReferenceLine, TooltipProps, LabelList } from 'recharts';
 import { AnyWidget, RowData, ColumnConfig, WidgetSize, ChartWidget, KpiWidget, TitleWidget, DataTableWidget, TextWidget, AIInsightWidget } from '../types';
@@ -311,7 +312,7 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = ({ widget, data, columnConfi
   
   const getTitle = (w: AnyWidget): string => {
     if (w.type === 'datatable') return w.title;
-    if (w.type === 'title') return "Report Title";
+    if (w.type === 'title') return w.config.text;
     return w.config.title;
   }
   const title = getTitle(widget);

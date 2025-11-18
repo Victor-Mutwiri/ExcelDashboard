@@ -44,8 +44,7 @@ const DebouncedInput: React.FC<{
     }, debounce);
 
     return () => clearTimeout(timeout);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value]);
+  }, [value, onChange, debounce]);
 
   return (
     <input {...props} value={value} onChange={e => setValue(e.target.value)} />
@@ -102,7 +101,7 @@ const DataTable: React.FC<DataTableProps> = ({ data, columnsConfig, title }) => 
       window.removeEventListener('beforeprint', setPrintPageSize);
       window.removeEventListener('afterprint', setDefaultPageSize);
     };
-  }, [data.length]);
+  }, [data]);
 
   const table = useReactTable({
     data,

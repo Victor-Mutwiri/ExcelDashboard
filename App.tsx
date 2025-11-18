@@ -106,13 +106,38 @@ export default function App() {
     }
   };
 
-  const handleAuthSuccess = () => {
+  const handleAuthSuccess = useCallback(() => {
     setIsAuthModalOpen(false);
     if (authActionCallback) {
       authActionCallback();
       setAuthActionCallback(null);
     }
-  };
+  }, [authActionCallback]);
+
+  const handleReset = useCallback(() => {
+    setAppState('UPLOAD');
+    setFileName('');
+    setParsedFile(null);
+    setSelectedSheet('');
+    setColumnConfig([]);
+    setData([]);
+    setWidgets([]);
+    setIsPreviewMode(false);
+    setShowLandingPage(false); 
+  }, []);
+  
+  const handleSheetSelected = useCallback((sheetName: string, file: ParsedFile | null = parsedFile) => {
+    if (!file) return;
+    setSelectedSheet(sheetName);
+    const sheetData = file.sheets[sheetName];
+    const headers = sheetData[0] || [];
+    const initialConfig: ColumnConfig[] = headers.map((h, i) => ({
+      id: `col_${i}`,
+      label: String(h || `Column ${i + 1}`),
+      isNumeric: sheetData.slice(1).every(row => row[i] === null || row[i] === '' || isPotentiallyNumeric(row[i])),
+    }));
+    setColumnConfig(initialConfig);
+  }, [parsedFile]);
 
   // --- DATA HANDLING & STATE TRANSITIONS ---
   const handleFileUploaded = useCallback(async (file: File) => {
@@ -130,7 +155,7 @@ export default function App() {
       console.error("Error processing file:", error);
       handleReset();
     }
-  }, []);
+  }, [handleSheetSelected, handleReset]);
 
   const handleDataPasted = useCallback((pastedData: string) => {
     try {
@@ -144,20 +169,7 @@ export default function App() {
       console.error("Error processing pasted data:", error);
       handleReset();
     }
-  }, []);
-
-  const handleSheetSelected = useCallback((sheetName: string, file: ParsedFile | null = parsedFile) => {
-    if (!file) return;
-    setSelectedSheet(sheetName);
-    const sheetData = file.sheets[sheetName];
-    const headers = sheetData[0] || [];
-    const initialConfig: ColumnConfig[] = headers.map((h, i) => ({
-      id: `col_${i}`,
-      label: String(h || `Column ${i + 1}`),
-      isNumeric: sheetData.slice(1).every(row => row[i] === null || row[i] === '' || isPotentiallyNumeric(row[i])),
-    }));
-    setColumnConfig(initialConfig);
-  }, [parsedFile]);
+  }, [handleSheetSelected, handleReset]);
 
   const handleConfigConfirmed = useCallback((finalConfig: ColumnConfig[]) => {
     if (!parsedFile || !selectedSheet) return;
@@ -170,18 +182,6 @@ export default function App() {
     setAppState('DASHBOARD');
   }, [parsedFile, selectedSheet, fileName, appState]);
 
-  const handleReset = () => {
-    setAppState('UPLOAD');
-    setFileName('');
-    setParsedFile(null);
-    setSelectedSheet('');
-    setColumnConfig([]);
-    setData([]);
-    setWidgets([]);
-    setIsPreviewMode(false);
-    setShowLandingPage(false); 
-  };
-  
   const handleGetStarted = () => {
     handleReset();
     setShowLandingPage(false);

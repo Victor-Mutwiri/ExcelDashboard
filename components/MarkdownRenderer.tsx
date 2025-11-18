@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 interface MarkdownRendererProps {
@@ -5,71 +6,64 @@ interface MarkdownRendererProps {
 }
 
 const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
-    const lines = content.split('\n');
-    // Fix: Replaced JSX.Element with React.ReactElement to resolve "Cannot find namespace 'JSX'" error.
-    const elements: (React.ReactElement | null)[] = [];
-    let inList = false;
+  if (!content) {
+    return null;
+  }
 
-    // Helper to render inline formatting
-    const renderInline = (text: string) => {
-        // Split by all supported markdown syntax using a regex with capturing groups
-        const parts = text.split(/(\*\*.*?\*\*|\*.*?\*|`.*?`)/g).filter(Boolean);
+  // Helper to render inline formatting for bold, italic, and code
+  const renderInline = (text: string): React.ReactNode => {
+    // Split text by recognized markdown patterns, keeping the delimiters
+    const parts = text.split(/(\*\*.*?\*\*|\*.*?\*|`.*?`)/g).filter(Boolean);
 
-        return parts.map((part, i) => {
-            if (part.startsWith('**') && part.endsWith('**')) {
-                return <strong key={i}>{part.slice(2, -2)}</strong>;
-            }
-            if (part.startsWith('*') && part.endsWith('*')) {
-                return <em key={i}>{part.slice(1, -1)}</em>;
-            }
-            if (part.startsWith('`') && part.endsWith('`')) {
-                return <code key={i} className="bg-[var(--bg-contrast)] text-[var(--color-accent)] px-1 py-0.5 rounded text-sm font-mono">{part.slice(1, -1)}</code>;
-            }
-            return part;
-        });
-    };
-
-    lines.forEach((line, index) => {
-        if (line.trim().startsWith('- ')) {
-            const listContent = line.trim().substring(2);
-            if (!inList) {
-                inList = true;
-                // Start a new list
-                elements.push(
-                    <ul key={`ul-${index}`} className="list-disc pl-5 space-y-1 my-2">
-                        <li key={index}>{renderInline(listContent)}</li>
-                    </ul>
-                );
-            } else {
-                // Add to the existing list
-                const lastElement = elements[elements.length - 1];
-                if(lastElement && lastElement.type === 'ul') {
-                    // FIX: Cast lastElement to a specific ReactElement type to inform TypeScript about the shape of its props,
-                    // resolving errors when accessing `children` and spreading `props`.
-                    const ulElement = lastElement as React.ReactElement<React.HTMLProps<HTMLUListElement>>;
-                    // Fix: Correctly handle adding children to an existing list element.
-                    // The previous implementation would fail if `props.children` was a single element and not an array.
-                    const existingChildren = React.Children.toArray(ulElement.props.children);
-                    const newProps = {...ulElement.props, children: [...existingChildren, <li key={index}>{renderInline(listContent)}</li>]};
-                    elements[elements.length - 1] = React.cloneElement(ulElement, newProps);
-                }
-            }
-        } else {
-            inList = false;
-            // Treat empty lines as paragraph breaks
-            if (line.trim() === '') {
-                 elements.push(null);
-            } else {
-                elements.push(<p key={index} className="my-2">{renderInline(line)}</p>);
-            }
-        }
+    return parts.map((part, i) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={i}>{part.slice(2, -2)}</strong>;
+      }
+      if (part.startsWith('*') && part.endsWith('*')) {
+        return <em key={i}>{part.slice(1, -1)}</em>;
+      }
+      if (part.startsWith('`') && part.endsWith('`')) {
+        return <code key={i} className="bg-[var(--bg-contrast)] text-[var(--color-accent)] px-1 py-0.5 rounded text-sm font-mono">{part.slice(1, -1)}</code>;
+      }
+      return part;
     });
+  };
 
-    return (
-        <div className="markdown-content text-sm leading-relaxed">
-            {elements.filter(Boolean)}
-        </div>
-    );
+  // Split content into blocks based on blank lines. This is more robust.
+  const blocks = content.split(/\n\s*\n/).filter(block => block.trim());
+
+  return (
+    <div className="markdown-content text-sm leading-relaxed">
+      {blocks.map((block, blockIndex) => {
+        const lines = block.split('\n');
+        // A block is determined to be a list if all its non-empty lines start with a hyphen.
+        const isList = lines.filter(l => l.trim() !== '').every(l => l.trim().startsWith('- '));
+
+        if (isList) {
+          // Filter out empty lines and map to list items
+          const listItems = lines
+            .map(l => l.trim())
+            .filter(l => l.startsWith('- '))
+            .map(l => l.substring(2).trim());
+
+          return (
+            <ul key={blockIndex} className="list-disc pl-5 space-y-1 my-2">
+              {listItems.map((item, itemIndex) => (
+                <li key={itemIndex}>{renderInline(item)}</li>
+              ))}
+            </ul>
+          );
+        }
+
+        // Otherwise, render the entire block as a paragraph
+        return (
+          <p key={blockIndex} className="my-2 whitespace-pre-wrap">
+            {renderInline(block)}
+          </p>
+        );
+      })}
+    </div>
+  );
 };
 
 export default MarkdownRenderer;
