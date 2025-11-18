@@ -230,8 +230,14 @@ const ChartModal: React.FC<ChartModalProps> = ({ isOpen, onClose, data, columnCo
     const dataLabelFormatter = (value: number) => value.toLocaleString(undefined, { maximumFractionDigits: 3 });
 
     const yAxisDomain: any = [
-      (dataMin: number) => Math.floor(Math.min(0, dataMin) * 1.1),
-      (dataMax: number) => Math.ceil(Math.max(0, dataMax) * 1.1)
+      (dataMin: number) => {
+          const min = Number.isFinite(dataMin) ? dataMin : 0;
+          return Math.floor(Math.min(0, min) * 1.1);
+      },
+      (dataMax: number) => {
+          const max = Number.isFinite(dataMax) ? dataMax : 0;
+          return Math.ceil(Math.max(0, max) * 1.1);
+      }
     ];
 
     return (
@@ -275,7 +281,7 @@ const ChartModal: React.FC<ChartModalProps> = ({ isOpen, onClose, data, columnCo
                 const isBar = (hasLineSeries && type === 'bar') || chartType === 'bar';
                 if (isBar) {
                     return (
-                        <Bar key={key} yAxisId={hasLineSeries ? "left" : undefined} dataKey={key} fill={color}>
+                        <Bar key={key} yAxisId="left" dataKey={key} fill={color}>
                             {showDataLabels && <LabelList dataKey={key} position="top" fill="var(--text-secondary)" fontSize={11} formatter={dataLabelFormatter} />}
                             {aggregatedData.map((entry) => {
                                 const xValue = entry[xAxisKey] as string;
@@ -287,12 +293,12 @@ const ChartModal: React.FC<ChartModalProps> = ({ isOpen, onClose, data, columnCo
                 }
                 
                 if (chartType === 'line') {
-                  return <Line key={key} type="monotone" dataKey={key} stroke={color}>
+                  return <Line key={key} yAxisId="left" type="monotone" dataKey={key} stroke={color}>
                     {showDataLabels && <LabelList dataKey={key} position="top" fill="var(--text-secondary)" fontSize={11} formatter={dataLabelFormatter} />}
                   </Line>;
                 }
                 if (chartType === 'area') {
-                  return <Area key={key} type="monotone" dataKey={key} stroke={color} fill={color} fillOpacity={0.6} strokeWidth={2}>
+                  return <Area key={key} yAxisId="left" type="monotone" dataKey={key} stroke={color} fill={color} fillOpacity={0.6} strokeWidth={2}>
                     {showDataLabels && <LabelList dataKey={key} position="top" fill="var(--text-secondary)" fontSize={11} formatter={dataLabelFormatter} />}
                   </Area>;
                 }
