@@ -78,7 +78,10 @@ const UploadPage: React.FC<UploadPageProps> = ({ onFileUpload, onDataPaste, onOp
   return (
     <div className="w-full max-w-2xl text-center bg-[var(--bg-card)] rounded-2xl shadow-lg transition-all">
       <div className="p-8">
-        <h1 className="text-4xl font-bold mb-2">DataDash</h1>
+        <h1 className="text-2xl font-bold mb-2">
+          <span style={{ color: 'var(--logo-color-sheet)' }}>Sheet</span>
+          <span style={{ color: 'var(--logo-color-sight)' }}>Sight</span>
+        </h1>
         <p className="text-lg text-[var(--text-secondary)] mb-8">Instantly turn your spreadsheets into interactive dashboards.</p>
         
         <div className="flex justify-center border-b border-[var(--border-color)] mb-6">

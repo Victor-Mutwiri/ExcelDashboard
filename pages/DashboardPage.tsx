@@ -5,6 +5,7 @@ import { themes, ThemeName } from '../themes';
 import DashboardCanvas from '../components/DashboardCanvas';
 import { ChartIcon, PlusIcon, ResetIcon, SaveIcon, FolderOpenIcon, KpiIcon, TableIcon, ExportIcon, EyeIcon, CloseIcon, TitleIcon, BackIcon, CalculatorIcon, TextIcon, SparklesIcon, SettingsIcon } from '../components/Icons';
 import type { Session } from '@supabase/supabase-js';
+import Logo from '../components/Logo';
 
 interface DashboardPageProps {
     fileName: string;
@@ -114,8 +115,11 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
             <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 noprint bg-[var(--bg-header)] theme-corporate:text-white px-4 sm:px-6 lg:px-8 py-4 border-b border-[var(--border-color)] shadow-sm">
               <div className="flex items-center gap-4">
                 <button onClick={onShowLandingPage} className="flex items-center gap-2 group" data-tooltip="Back to Home Page">
-                  <TableIcon className="w-8 h-8 text-[var(--color-accent)] transition-transform group-hover:scale-110" />
-                  <span className="text-2xl font-bold text-[var(--text-primary)] transition-colors group-hover:text-[var(--color-accent-secondary)]">DataDash</span>
+                  <Logo className="w-8 h-8 text-[var(--color-accent)] transition-transform group-hover:scale-110" />
+                  <span className="text-lg font-bold">
+                    <span style={{ color: 'var(--logo-color-sheet)' }}>Sheet</span>
+                    <span style={{ color: 'var(--logo-color-sight)' }}>Sight</span>
+                  </span>
                 </button>
                 <div className="border-l border-[var(--border-color-heavy)] pl-4">
                   <h1 className="text-xl font-bold leading-tight">{fileName}</h1>

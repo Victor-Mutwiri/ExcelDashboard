@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="icon" type="image/png" href="https://ik.imagekit.io/janjez/ExcelDash/Favicon%20(2).png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <!-- SEO Meta Tags -->
-  <title>DataDash | Instant Excel & CSV to Interactive Dashboards</title>
+  <title>SheetSight | Instant Spreadsheet to Interactive Dashboards</title>
   <meta name="description" content="Turn your spreadsheets into beautiful, interactive dashboards in seconds. Upload an Excel or CSV file, or paste data, to instantly generate charts, tables, and insights. No code required." />
   <meta name="keywords" content="excel dashboard, csv dashboard, data visualization, interactive charts, business intelligence, spreadsheet to dashboard, no code data analysis, data dashboard, dashboard generator" />
   <meta name="robots" content="index, follow" />
@@ -15,28 +15,28 @@
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://datadash.app" />
-  <meta property="og:title" content="DataDash | Instant Excel & CSV to Interactive Dashboards" />
+  <meta property="og:title" content="SheetSight | Instant Spreadsheet to Interactive Dashboards" />
   <meta property="og:description" content="Turn your spreadsheets into beautiful, interactive dashboards in seconds. Upload an Excel or CSV file to instantly generate charts, tables, and insights." />
-  <meta property="og:image" content="https://datadash.app/og-image.png" />
+  <meta property="og:image" content="https://ik.imagekit.io/janjez/Sheetsight%20logo.png" />
 
   <!-- Twitter -->
   <meta property="twitter:card" content="summary_large_image" />
   <meta property="twitter:url" content="https://datadash.app" />
-  <meta property="twitter:title" content="DataDash | Instant Excel & CSV to Interactive Dashboards" />
+  <meta property="twitter:title" content="SheetSight | Instant Spreadsheet to Interactive Dashboards" />
   <meta property="twitter:description" content="Turn your spreadsheets into beautiful, interactive dashboards in seconds. Upload an Excel or CSV file to instantly generate charts, tables, and insights." />
-  <meta property="twitter:image" content="https://datadash.app/og-image.png" />
+  <meta property="twitter:image" content="https://ik.imagekit.io/janjez/Sheetsight%20logo.png" />
   
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Merriweather:wght@400;700&family=Montserrat:wght@400;700&family=Open+Sans:wght@400;700&family=Oswald:wght@400;700&family=PT+Sans:wght@400;700&family=Playfair+Display:wght@400;700&family=Raleway:wght@400;700&family=Roboto:wght@400;700&family=Source+Sans+Pro:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Merriweather:wght@400;700&family=Montserrat:wght@400;700;800&family=Open+Sans:wght@400;700&family=Oswald:wght@400;700&family=PT+Sans:wght@400;700&family=Playfair+Display:wght@400;700&family=Raleway:wght@400;700&family=Roboto:wght@400;700&family=Source+Sans+Pro:wght@400;700&display=swap" rel="stylesheet">
   
   <!-- Structured Data -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    "name": "DataDash",
+    "name": "SheetSight",
     "applicationCategory": "BusinessApplication",
     "operatingSystem": "Web",
     "description": "An interactive dashboard generator that allows users to upload Excel or CSV files to instantly turn their spreadsheets into beautiful, interactive dashboards with charts, sorting, and filtering capabilities.",
@@ -58,6 +58,10 @@
       darkMode: 'class',
       theme: {
         extend: {
+          fontFamily: {
+            sans: ['Roboto', 'sans-serif'],
+            heading: ['Montserrat', 'sans-serif'],
+          },
           colors: {
             gray: {
               50: '#f8fafc',
@@ -114,6 +118,8 @@
     --color-accent: #4f46e5;
     --color-accent-secondary: #6366f1;
     --color-accent-hsl: 243 80% 58%;
+    --logo-color-sheet: #211b5c;
+    --logo-color-sight: #18acde;
   }
 
   .theme-dark {
@@ -138,6 +144,8 @@
     --color-accent: #818cf8;
     --color-accent-secondary: #a78bfa;
     --color-accent-hsl: 236 91% 74%;
+    --logo-color-sheet: #A8A5D1;
+    --logo-color-sight: #18acde;
   }
 
   .theme-corporate {
@@ -162,6 +170,8 @@
     --color-accent: #0ea5e9;
     --color-accent-secondary: #0369a1;
     --color-accent-hsl: 202 85% 51%;
+    --logo-color-sheet: #A8A5D1;
+    --logo-color-sight: #18acde;
   }
 
   .print-title {
@@ -402,6 +412,20 @@
     font-weight: 600; /* semibold */
     font-size: 0.875rem; /* text-sm */
     white-space: nowrap;
+  }
+
+  /* Marquee animation for logo scroller */
+  @keyframes scroll {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  .animate-scroll {
+    animation: scroll 40s linear infinite;
   }
 </style>
 </head>
