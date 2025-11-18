@@ -33,12 +33,12 @@ const sizeClasses: Record<WidgetSize, string> = {
   'full': 'col-span-12',
 };
 
-const CustomTooltip: React.FC<TooltipProps<number, string>> = ({ active, payload, label }) => {
+const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-black/50 backdrop-blur-sm p-3 rounded-lg border border-[var(--border-color)] shadow-lg">
           <p className="label font-bold mb-2">{`${label}`}</p>
-          {payload.map((pld) => (
+          {payload.map((pld: any) => (
             <p key={pld.name} style={{ color: pld.color }} className="text-sm">
               {`${pld.name}: ${pld.value?.toLocaleString(undefined, { maximumFractionDigits: 3 })}`}
             </p>

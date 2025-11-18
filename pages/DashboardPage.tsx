@@ -49,6 +49,7 @@ const UserMenu: React.FC<{ session: Session; onSettings: () => void; onSignOut: 
                 onClick={() => setIsOpen(prev => !prev)}
                 className="w-10 h-10 bg-[var(--bg-accent)] text-[var(--text-on-accent)] rounded-full flex items-center justify-center font-bold text-lg"
                 data-tooltip={`Logged in as ${session.user.email}`}
+                data-tooltip-pos="bottom"
             >
                 {userInitial}
             </button>
@@ -114,7 +115,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
             )}
             <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 noprint bg-[var(--bg-header)] theme-corporate:text-white px-4 sm:px-6 lg:px-8 py-4 border-b border-[var(--border-color)] shadow-sm">
               <div className="flex items-center gap-4">
-                <button onClick={onShowLandingPage} className="flex items-center gap-2 group" data-tooltip="Back to Home Page">
+                <button onClick={onShowLandingPage} className="flex items-center gap-2 group" data-tooltip="Back to Home Page" data-tooltip-pos="bottom">
                   <Logo className="w-8 h-8 text-[var(--color-accent)] transition-transform group-hover:scale-110" />
                   <span className="text-lg font-bold">
                     <span style={{ color: 'var(--logo-color-sheet)' }}>Sheet</span>
@@ -128,24 +129,24 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
               </div>
               <div className="flex items-center gap-2 flex-wrap">
                 {hiddenWidgetsCount > 0 && (
-                  <button data-tooltip="View and restore widgets you've hidden from the dashboard." onClick={onManageHidden} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2">
+                  <button data-tooltip="View and restore widgets you've hidden from the dashboard." data-tooltip-pos="bottom" onClick={onManageHidden} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2">
                     <EyeIcon /> Hidden <span className="bg-[var(--bg-accent)] text-[var(--text-on-accent)] text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">{hiddenWidgetsCount}</span>
                   </button>
                 )}
-                 <button data-tooltip="Return to the data configuration screen to rename, reorder, or remove columns." onClick={onBackToConfig} disabled={!canGoBackToConfig} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                 <button data-tooltip="Return to the data configuration screen to rename, reorder, or remove columns." data-tooltip-pos="bottom" onClick={onBackToConfig} disabled={!canGoBackToConfig} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
                   <BackIcon /> Back to Config
                 </button>
-                <button data-tooltip="Clear the current dashboard and start over with a new file or pasted data." onClick={onReset} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2">
+                <button data-tooltip="Clear the current dashboard and start over with a new file or pasted data." data-tooltip-pos="bottom" onClick={onReset} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2">
                   <ResetIcon /> Start Over
                 </button>
-                 <button data-tooltip="Load a previously saved dashboard session." onClick={onLoad} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2">
+                 <button data-tooltip="Load a previously saved dashboard session." data-tooltip-pos="bottom" onClick={onLoad} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2">
                   <FolderOpenIcon /> Load
                 </button>
-                <button data-tooltip="Save your current dashboard layout, widgets, and data." onClick={onSave} className="px-4 py-2 text-sm font-semibold text-[var(--text-on-accent)] bg-[var(--bg-accent)] hover:bg-[var(--bg-accent-hover)] rounded-lg flex items-center gap-2">
+                <button data-tooltip="Save your current dashboard layout, widgets, and data." data-tooltip-pos="bottom" onClick={onSave} className="px-4 py-2 text-sm font-semibold text-[var(--text-on-accent)] bg-[var(--bg-accent)] hover:bg-[var(--bg-accent-hover)] rounded-lg flex items-center gap-2">
                   <SaveIcon /> Save
                 </button>
                 <div className="relative">
-                    <button data-tooltip="Add a new widget to your dashboard." onClick={() => setAddWidgetMenuOpen(prev => !prev)} className="px-4 py-2 text-sm font-semibold text-white bg-green-600 hover:bg-green-500 rounded-lg flex items-center gap-2">
+                    <button data-tooltip="Add a new widget to your dashboard." data-tooltip-pos="bottom" onClick={() => setAddWidgetMenuOpen(prev => !prev)} className="px-4 py-2 text-sm font-semibold text-white bg-green-600 hover:bg-green-500 rounded-lg flex items-center gap-2">
                         <PlusIcon /> Add
                     </button>
                     {isAddWidgetMenuOpen && (
@@ -162,7 +163,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                     )}
                 </div>
                  <div className="relative">
-                    <button data-tooltip="Export your dashboard." onClick={() => setExportMenuOpen(prev => !prev)} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2">
+                    <button data-tooltip="Export your dashboard." data-tooltip-pos="bottom" onClick={() => setExportMenuOpen(prev => !prev)} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2">
                         <ExportIcon /> Export
                     </button>
                     {isExportMenuOpen && (
@@ -175,7 +176,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                 {session ? (
                     <UserMenu session={session} onSettings={onSettings} onSignOut={onSignOut} />
                 ) : (
-                    <button data-tooltip="Configure dashboard settings, including AI providers and theme." onClick={onSettings} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2">
+                    <button data-tooltip="Configure dashboard settings, including AI providers and theme." data-tooltip-pos="bottom" onClick={onSettings} className="px-4 py-2 text-sm font-semibold bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg flex items-center gap-2">
                         <SettingsIcon /> Settings
                     </button>
                 )}

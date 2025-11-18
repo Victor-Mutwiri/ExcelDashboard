@@ -358,6 +358,22 @@
     visibility: visible;
   }
 
+  /* Tooltip Bottom Position */
+  [data-tooltip-pos="bottom"]::after {
+    bottom: auto;
+    top: 100%;
+    margin-bottom: 0;
+    margin-top: 8px;
+  }
+  [data-tooltip-pos="bottom"]::before {
+    bottom: auto;
+    top: 100%;
+    margin-bottom: 0;
+    margin-top: -4px; /* Overlap slightly to connect */
+    border-top-color: transparent;
+    border-bottom-color: #1e293b; /* gray-800 */
+  }
+
   /* Resize Handle Styles */
   .resize-handle-wrapper {
     position: absolute;
