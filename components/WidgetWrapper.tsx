@@ -209,7 +209,41 @@ const ChartRenderer: React.FC<{ widget: ChartWidget; data: RowData[]; chartColor
 
 const WidgetWrapper: React.FC<WidgetWrapperProps> = ({ widget, data, columnConfig, onDelete, onHide, onEdit, onUpdateSize, onDragStart, onDragEnter, onDragEnd, isDragging, chartColors, gridContainerRef }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [resizingInfo, setResizingInfo] = useState<{ width: number; sizeLabel: WidgetSize } | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
+
+  const sizeMap: { size: WidgetSize, span: number }[] = [
+    { size: '1/4', span: 3 },
+    { size: '1/3', span: 4 },
+    { size: '1/2', span: 6 },
+    { size: '2/3', span: 8 },
+    { size: 'full', span: 12 },
+  ];
+
+  const getSnappedSizeInfo = (
+    pixelWidth: number,
+    gridWidth: number,
+    gap: number
+  ): { snappedPixelWidth: number; snappedSize: WidgetSize } => {
+    const effectiveColWidth = (gridWidth - (11 * gap)) / 12;
+
+    let bestMatch: WidgetSize = 'full';
+    let smallestDiff = Infinity;
+
+    for (const size of sizeMap) {
+      const spanWidth = (size.span * effectiveColWidth) + ((size.span - 1) * gap);
+      const diff = Math.abs(pixelWidth - spanWidth);
+      if (diff < smallestDiff) {
+        smallestDiff = diff;
+        bestMatch = size.size;
+      }
+    }
+
+    const finalSpan = sizeMap.find(s => s.size === bestMatch)!.span;
+    const snappedPixelWidth = Math.min(gridWidth, (finalSpan * effectiveColWidth) + ((finalSpan - 1) * gap));
+
+    return { snappedPixelWidth, snappedSize: bestMatch };
+  };
 
   const handleResizeMouseDown = (mouseDownEvent: React.MouseEvent<HTMLDivElement>) => {
     mouseDownEvent.preventDefault();
@@ -220,42 +254,32 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = ({ widget, data, columnConfi
     document.body.setAttribute('data-resizing', 'true');
     const startX = mouseDownEvent.clientX;
     const startWidth = wrapperRef.current.getBoundingClientRect().width;
-    const gridWidth = gridContainerRef.current.getBoundingClientRect().width;
+    const gridRect = gridContainerRef.current.getBoundingClientRect();
+    const gridWidth = gridRect.width;
 
-    const effectiveColWidth = gridWidth / 12;
+    const gridStyle = window.getComputedStyle(gridContainerRef.current);
+    const gap = parseFloat(gridStyle.getPropertyValue('gap'));
 
-    const sizeMap: { size: WidgetSize, span: number }[] = [
-        { size: '1/4', span: 3 },
-        { size: '1/3', span: 4 },
-        { size: '1/2', span: 6 },
-        { size: '2/3', span: 8 },
-        { size: 'full', span: 12 },
-    ];
-    
     const handleMouseMove = (mouseMoveEvent: MouseEvent) => {
         const deltaX = mouseMoveEvent.clientX - startX;
         const newPixelWidth = startWidth + deltaX;
         
-        const targetSpan = Math.min(12, Math.max(3, Math.round(newPixelWidth / effectiveColWidth)));
+        const { snappedPixelWidth, snappedSize } = getSnappedSizeInfo(newPixelWidth, gridWidth, gap);
         
-        let bestMatch: WidgetSize = 'full';
-        let smallestDiff = Infinity;
-        for (const size of sizeMap) {
-            const diff = Math.abs(targetSpan - size.span);
-            if (diff < smallestDiff) {
-                smallestDiff = diff;
-                bestMatch = size.size;
-            }
-        }
-
-        if (widget.size !== bestMatch) {
-            onUpdateSize(bestMatch);
-        }
+        setResizingInfo({ width: snappedPixelWidth, sizeLabel: snappedSize });
     };
 
     const handleMouseUp = () => {
         document.body.removeAttribute('data-resizing');
         document.body.style.cursor = 'auto';
+
+        setResizingInfo(prev => {
+            if (prev && prev.sizeLabel !== widget.size) {
+                onUpdateSize(prev.sizeLabel);
+            }
+            return null;
+        });
+        
         window.removeEventListener('mousemove', handleMouseMove);
         window.removeEventListener('mouseup', handleMouseUp);
     };
@@ -304,7 +328,7 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = ({ widget, data, columnConfi
       onDragEnd={onDragEnd}
       onDragOver={(e) => e.preventDefault()}
     >
-      <div className="bg-[var(--bg-card)] rounded-xl h-full flex flex-col ring-1 ring-black/5 shadow-md">
+      <div className="bg-[var(--bg-card)] rounded-xl h-full flex flex-col ring-1 ring-black/5 shadow-md relative">
         <header className="flex items-center p-4 border-b border-[var(--border-color)]">
           <div className="w-8 flex-shrink-0">
             {widget.type !== 'title' && (
@@ -352,6 +376,17 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = ({ widget, data, columnConfi
         <main className="p-4 flex-grow min-h-0">
           {renderContent()}
         </main>
+
+        {resizingInfo && (
+          <div
+            className="resize-ghost-preview"
+            style={{ width: `${resizingInfo.width}px` }}
+          >
+            <span className="resize-ghost-label">
+              {resizingInfo.sizeLabel.replace('/', '-')} Width
+            </span>
+          </div>
+        )}
       </div>
       {widget.type !== 'title' && (
         <div

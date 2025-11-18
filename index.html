@@ -113,6 +113,7 @@
 
     --color-accent: #4f46e5;
     --color-accent-secondary: #6366f1;
+    --color-accent-hsl: 243 80% 58%;
   }
 
   .theme-dark {
@@ -136,6 +137,7 @@
     
     --color-accent: #818cf8;
     --color-accent-secondary: #a78bfa;
+    --color-accent-hsl: 236 91% 74%;
   }
 
   .theme-corporate {
@@ -159,6 +161,7 @@
 
     --color-accent: #0ea5e9;
     --color-accent-secondary: #0369a1;
+    --color-accent-hsl: 202 85% 51%;
   }
 
   .print-title {
@@ -374,6 +377,32 @@
     background-color: var(--color-accent);
   }
 
+  /* Ghost Preview for Resizing */
+  .resize-ghost-preview {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background-color: hsla(var(--color-accent-hsl), 0.1);
+    border: 2px dashed var(--color-accent);
+    border-radius: 0.75rem; /* rounded-xl */
+    z-index: 15;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: width 50ms linear;
+  }
+
+  .resize-ghost-label {
+    background-color: var(--color-accent);
+    color: var(--text-on-accent);
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px; /* rounded-full */
+    font-weight: 600; /* semibold */
+    font-size: 0.875rem; /* text-sm */
+    white-space: nowrap;
+  }
 </style>
 </head>
 <body class="transition-colors duration-300">
