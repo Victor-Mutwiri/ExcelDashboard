@@ -344,6 +344,36 @@
     opacity: 1;
     visibility: visible;
   }
+
+  /* Resize Handle Styles */
+  .resize-handle-wrapper {
+    position: absolute;
+    top: 0;
+    right: -4px; /* Center handle on the edge */
+    bottom: 0;
+    width: 8px;
+    cursor: col-resize;
+    z-index: 20; /* Ensure it's on top */
+  }
+
+  .resize-handle-indicator {
+    position: absolute;
+    top: 25%;
+    right: 3px;
+    height: 50%;
+    width: 2px;
+    background-color: var(--border-color-heavy);
+    border-radius: 1px;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+  }
+  
+  .resize-handle-wrapper:hover .resize-handle-indicator,
+  body[data-resizing='true'] .resize-handle-indicator {
+    opacity: 1;
+    background-color: var(--color-accent);
+  }
+
 </style>
 </head>
 <body class="transition-colors duration-300">

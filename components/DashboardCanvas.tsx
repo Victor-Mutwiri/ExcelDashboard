@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { AnyWidget, RowData, ColumnConfig, WidgetSize } from '../types';
 import WidgetWrapper from './WidgetWrapper';
 
@@ -26,6 +26,7 @@ const DashboardCanvas: React.FC<DashboardCanvasProps> = ({
   chartColors
 }) => {
   const [draggedId, setDraggedId] = useState<string | null>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
 
   const handleDragStart = (id: string) => {
     setDraggedId(id);
@@ -52,7 +53,7 @@ const DashboardCanvas: React.FC<DashboardCanvasProps> = ({
   const visibleWidgets = widgets.filter(w => !w.isHidden);
 
   return (
-    <div className="grid grid-cols-12 gap-6">
+    <div ref={canvasRef} className="grid grid-cols-12 gap-6">
       {visibleWidgets.map((widget) => (
         <WidgetWrapper
           key={widget.id}
@@ -68,6 +69,7 @@ const DashboardCanvas: React.FC<DashboardCanvasProps> = ({
           onDragEnd={handleDragEnd}
           isDragging={draggedId === widget.id}
           chartColors={chartColors}
+          gridContainerRef={canvasRef}
         />
       ))}
     </div>

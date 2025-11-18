@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { ResponsiveContainer, BarChart, Bar, LineChart, Line, PieChart, Pie, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell, ReferenceLine, TooltipProps, LabelList } from 'recharts';
 import { AnyWidget, RowData, ColumnConfig, WidgetSize, ChartWidget, KpiWidget, TitleWidget, DataTableWidget, TextWidget, AIInsightWidget } from '../types';
 import { DragHandleIcon, EllipsisVerticalIcon, TrashIcon, EyeOffIcon, PencilIcon } from './Icons';
@@ -21,6 +21,7 @@ interface WidgetWrapperProps {
   onDragEnd: () => void;
   isDragging: boolean;
   chartColors: string[];
+  gridContainerRef: React.RefObject<HTMLDivElement>;
 }
 
 const sizeClasses: Record<WidgetSize, string> = {
@@ -206,8 +207,63 @@ const ChartRenderer: React.FC<{ widget: ChartWidget; data: RowData[]; chartColor
 };
 
 
-const WidgetWrapper: React.FC<WidgetWrapperProps> = ({ widget, data, columnConfig, onDelete, onHide, onEdit, onUpdateSize, onDragStart, onDragEnter, onDragEnd, isDragging, chartColors }) => {
+const WidgetWrapper: React.FC<WidgetWrapperProps> = ({ widget, data, columnConfig, onDelete, onHide, onEdit, onUpdateSize, onDragStart, onDragEnter, onDragEnd, isDragging, chartColors, gridContainerRef }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  const handleResizeMouseDown = (mouseDownEvent: React.MouseEvent<HTMLDivElement>) => {
+    mouseDownEvent.preventDefault();
+    mouseDownEvent.stopPropagation();
+
+    if (!wrapperRef.current || !gridContainerRef.current) return;
+    
+    document.body.setAttribute('data-resizing', 'true');
+    const startX = mouseDownEvent.clientX;
+    const startWidth = wrapperRef.current.getBoundingClientRect().width;
+    const gridWidth = gridContainerRef.current.getBoundingClientRect().width;
+
+    const effectiveColWidth = gridWidth / 12;
+
+    const sizeMap: { size: WidgetSize, span: number }[] = [
+        { size: '1/4', span: 3 },
+        { size: '1/3', span: 4 },
+        { size: '1/2', span: 6 },
+        { size: '2/3', span: 8 },
+        { size: 'full', span: 12 },
+    ];
+    
+    const handleMouseMove = (mouseMoveEvent: MouseEvent) => {
+        const deltaX = mouseMoveEvent.clientX - startX;
+        const newPixelWidth = startWidth + deltaX;
+        
+        const targetSpan = Math.min(12, Math.max(3, Math.round(newPixelWidth / effectiveColWidth)));
+        
+        let bestMatch: WidgetSize = 'full';
+        let smallestDiff = Infinity;
+        for (const size of sizeMap) {
+            const diff = Math.abs(targetSpan - size.span);
+            if (diff < smallestDiff) {
+                smallestDiff = diff;
+                bestMatch = size.size;
+            }
+        }
+
+        if (widget.size !== bestMatch) {
+            onUpdateSize(bestMatch);
+        }
+    };
+
+    const handleMouseUp = () => {
+        document.body.removeAttribute('data-resizing');
+        document.body.style.cursor = 'auto';
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.body.style.cursor = 'col-resize';
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+  };
 
   const renderContent = () => {
     switch (widget.type) {
@@ -240,7 +296,8 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = ({ widget, data, columnConfi
 
   return (
     <div
-      className={`${sizeClasses[widget.size]} transition-opacity duration-300 ${isDragging ? 'opacity-50' : 'opacity-100'} widget-card`}
+      ref={wrapperRef}
+      className={`${sizeClasses[widget.size]} transition-opacity duration-300 ${isDragging ? 'opacity-50' : 'opacity-100'} widget-card relative`}
       draggable={widget.type !== 'title'}
       onDragStart={onDragStart}
       onDragEnter={onDragEnter}
@@ -296,6 +353,15 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = ({ widget, data, columnConfi
           {renderContent()}
         </main>
       </div>
+      {widget.type !== 'title' && (
+        <div
+          className="resize-handle-wrapper noprint"
+          onMouseDown={handleResizeMouseDown}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="resize-handle-indicator"></div>
+        </div>
+      )}
     </div>
   );
 };
