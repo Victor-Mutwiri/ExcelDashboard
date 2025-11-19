@@ -483,7 +483,12 @@ export default function App() {
   const renderContent = () => {
     switch (appState) {
       case 'UPLOAD':
-        return <UploadPage onFileUpload={handleFileUploaded} onDataPaste={handleDataPasted} onOpenLoadModal={() => withAuth(() => setIsLoadModalOpen(true))} />;
+        return <UploadPage 
+                  onFileUpload={handleFileUploaded} 
+                  onDataPaste={handleDataPasted} 
+                  onOpenLoadModal={() => withAuth(() => setIsLoadModalOpen(true))} 
+                  onBackToLanding={() => setShowLandingPage(true)}
+               />;
       case 'CONFIGURE':
         if (!parsedFile) return null;
         return <ConfigurePage 
