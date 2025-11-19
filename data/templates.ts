@@ -152,7 +152,7 @@ export const dashboardTemplates: DashboardTemplate[] = [
   {
       id: 'finance-trading',
       name: 'Trading Performance',
-      description: 'Analyze strategy effectiveness, P/L, and risk metrics for traders.',
+      description: 'Prop firm ready. Analyze P/L, drawdowns, and progress towards targets.',
       category: 'Finance',
       iconName: 'ChartAnalyticsIcon',
       requiredFields: [
@@ -161,20 +161,84 @@ export const dashboardTemplates: DashboardTemplate[] = [
         { key: 'commission', label: 'Commission / Fees', dataType: 'number' },
         { key: 'symbol', label: 'Symbol / Ticker', dataType: 'string' },
         { key: 'strategy', label: 'Strategy Name', dataType: 'string', optional: true },
+        { key: 'outcome', label: 'Outcome (Win/Loss)', dataType: 'string', optional: true },
+        { key: 'rr', label: 'Risk:Reward Ratio', dataType: 'number', optional: true },
+        { key: 'balance', label: 'Account Balance', dataType: 'number', optional: true },
       ],
       widgets: [
         {
           id: 'tr-title',
           type: 'title',
           size: 'full',
-          config: { text: 'Trading Journal Analysis', fontFamily: 'Oswald', fontSize: 32, textAlign: 'left' }
+          config: { text: 'Trading Performance Dashboard', fontFamily: 'Oswald', fontSize: 32, textAlign: 'left' }
         },
         {
-          id: 'tr-kpi-pl',
+          id: 'tr-text-setup',
+          type: 'text',
+          size: 'full',
+          config: { 
+              title: '⚙️ Setup Instructions', 
+              content: '**How to configure your Prop Firm targets:**\n\n1. Click the **Edit (Pencil)** icon on the "Starting Capital", "Profit Target", and "Drawdown Limit" cards below.\n2. Change the formula to your specific number (e.g., replace `0` with `100000`).\n3. Click Save.' 
+          }
+        },
+        // Prop Firm Setup Row
+        {
+          id: 'tr-kpi-cap',
           type: 'kpi',
           size: '1/4',
-          config: { title: 'Total Net P/L', valueFormula: '{pl}', computation: 'SUM' }
+          config: { title: 'Starting Capital', valueFormula: '100000', computation: 'MAX' } // User to edit
         },
+        {
+          id: 'tr-kpi-target',
+          type: 'kpi',
+          size: '1/4',
+          config: { title: 'Profit Target ($)', valueFormula: '10000', computation: 'MAX' } // User to edit
+        },
+        {
+          id: 'tr-kpi-dd',
+          type: 'kpi',
+          size: '1/4',
+          config: { title: 'Max Drawdown ($)', valueFormula: '5000', computation: 'MAX' } // User to edit
+        },
+        {
+          id: 'tr-kpi-current-pl',
+          type: 'kpi',
+          size: '1/4',
+          config: { title: 'Current Total P/L', valueFormula: '{pl}', computation: 'SUM' }
+        },
+        // Main Charts
+        {
+          id: 'tr-chart-equity',
+          type: 'chart',
+          size: '2/3',
+          config: {
+            title: 'Account Progression & Target',
+            chartType: 'area',
+            xAxisKey: '{{date}}',
+            yAxisKeys: ['{{balance}}', '{{pl}}'], // Try to use balance if available, else P/L
+            seriesConfig: { '{{balance}}': 'MAX', '{{pl}}': 'SUM' },
+            seriesColors: { '{{balance}}': '#3b82f6', '{{pl}}': '#10b981' },
+            seriesType: { '{{balance}}': 'area', '{{pl}}': 'bar' },
+            showDataLabels: false,
+            referenceLine: { label: 'Profit Target', value: 10000, color: '#16a34a' }
+          }
+        },
+        {
+          id: 'tr-chart-outcome',
+          type: 'chart',
+          size: '1/3',
+          config: {
+            title: 'Win/Loss Distribution',
+            chartType: 'pie',
+            xAxisKey: '{{outcome}}',
+            yAxisKeys: ['{{pl}}'],
+            seriesConfig: { '{{pl}}': 'COUNT' },
+            seriesColors: {},
+            seriesType: {},
+            showDataLabels: true
+          }
+        },
+        // Stats Row
         {
           id: 'tr-kpi-count',
           type: 'kpi',
@@ -188,59 +252,41 @@ export const dashboardTemplates: DashboardTemplate[] = [
           config: { title: 'Avg P/L per Trade', valueFormula: '{pl}', computation: 'AVERAGE' }
         },
         {
-          id: 'tr-kpi-max',
+          id: 'tr-kpi-rr',
           type: 'kpi',
           size: '1/4',
-          config: { title: 'Best Trade (Max P/L)', valueFormula: '{pl}', computation: 'MAX' }
-        },
-        {
-          id: 'tr-chart-equity',
-          type: 'chart',
-          size: '2/3',
-          config: {
-            title: 'Daily P/L Performance',
-            chartType: 'bar',
-            xAxisKey: '{{date}}',
-            yAxisKeys: ['{{pl}}'],
-            seriesConfig: { '{{pl}}': 'SUM' },
-            seriesColors: { '{{pl}}': '#10b981' },
-            seriesType: { '{{pl}}': 'bar' },
-            showDataLabels: false,
-            referenceLine: { label: 'Break Even', value: 0, color: '#64748b' }
-          }
+          config: { title: 'Average R:R', valueFormula: '{rr}', computation: 'AVERAGE' }
         },
         {
           id: 'tr-kpi-comm',
           type: 'kpi',
-          size: '1/3',
+          size: '1/4',
           config: { title: 'Total Commissions', valueFormula: '{commission}', computation: 'SUM' }
+        },
+        // Analysis Row
+        {
+          id: 'tr-rank-strat',
+          type: 'rank',
+          size: '1/3',
+          config: { title: 'Top Strategies', categoryField: '{{strategy}}', valueField: '{{pl}}', aggregation: 'SUM', limit: 5, order: 'desc' }
         },
         {
           id: 'tr-rank-symbol',
           type: 'rank',
           size: '1/3',
-          config: { title: 'Best Assets (by P/L)', categoryField: '{{symbol}}', valueField: '{{pl}}', aggregation: 'SUM', limit: 5, order: 'desc' }
+          config: { title: 'Best Pairs/Symbols', categoryField: '{{symbol}}', valueField: '{{pl}}', aggregation: 'SUM', limit: 5, order: 'desc' }
         },
         {
-          id: 'tr-rank-worst',
-          type: 'rank',
-          size: '1/3',
-          config: { title: 'Worst Assets (by P/L)', categoryField: '{{symbol}}', valueField: '{{pl}}', aggregation: 'SUM', limit: 5, order: 'asc' }
-        },
-         {
-          id: 'tr-chart-strat',
-          type: 'chart',
-          size: '1/3',
-          config: {
-            title: 'P/L by Strategy',
-            chartType: 'pie',
-            xAxisKey: '{{strategy}}',
-            yAxisKeys: ['{{pl}}'],
-            seriesConfig: { '{{pl}}': 'SUM' },
-            seriesColors: {},
-            seriesType: {},
-            showDataLabels: true
-          }
+            id: 'tr-pivot-matrix',
+            type: 'pivot',
+            size: '1/3',
+            config: {
+                title: 'Strategy vs Symbol Matrix',
+                rowFields: ['{{strategy}}'],
+                colFields: ['{{symbol}}'],
+                valueField: '{{pl}}',
+                aggregation: 'SUM'
+            }
         }
       ]
   },

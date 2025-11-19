@@ -45,7 +45,7 @@ export interface ChartWidgetConfig {
   title: string;
   seriesColors: Record<string, string>;
   valueColors?: Record<string, string>;
-  seriesType?: Record<string, 'bar' | 'line'>;
+  seriesType?: Record<string, 'bar' | 'line' | 'area'>;
   showDataLabels?: boolean;
   referenceLine?: {
     label: string;

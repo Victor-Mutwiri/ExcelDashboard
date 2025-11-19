@@ -404,9 +404,14 @@ export default function App() {
     setEditingWidgetId(null);
   };
 
-  const handleAddKpi = (config: KpiWidgetConfig) => {
-    setWidgets(prev => [...prev, { id: `kpi-${Date.now()}`, type: 'kpi', size: '1/4', config }]);
+  const handleSaveKpi = (config: KpiWidgetConfig) => {
+    if (editingWidgetId) {
+        setWidgets(prev => prev.map(w => (w.id === editingWidgetId && w.type === 'kpi' ? { ...w, config } : w)));
+    } else {
+        setWidgets(prev => [...prev, { id: `kpi-${Date.now()}`, type: 'kpi', size: '1/4', config }]);
+    }
     setIsKpiModalOpen(false);
+    setEditingWidgetId(null);
   };
 
   const handleGenerateAIInsight = async (config: { title: string; selectedColumns: string[]; aiServiceId: string }) => {
@@ -453,6 +458,7 @@ export default function App() {
         case 'text': setIsTextModalOpen(true); break;
         case 'pivot': setIsPivotModalOpen(true); break;
         case 'rank': setIsRankModalOpen(true); break;
+        case 'kpi': setIsKpiModalOpen(true); break;
         case 'datatable': case 'ai': setIsTitleEditModalOpen(true); break;
     }
   };
@@ -605,7 +611,7 @@ export default function App() {
         <PivotModal isOpen={isPivotModalOpen} onClose={() => { setIsPivotModalOpen(false); setEditingWidgetId(null); }} columnConfig={columnConfig} onSave={handleSavePivot} initialConfig={widgetToEdit?.type === 'pivot' ? widgetToEdit.config : undefined} />
         <RankModal isOpen={isRankModalOpen} onClose={() => { setIsRankModalOpen(false); setEditingWidgetId(null); }} columnConfig={columnConfig} onSave={handleSaveRank} initialConfig={widgetToEdit?.type === 'rank' ? widgetToEdit.config : undefined} />
         <CalculatedColumnModal isOpen={isCalcModalOpen} onClose={() => setIsCalcModalOpen(false)} numericColumns={columnConfig.filter(c => c.isNumeric)} existingLabels={columnConfig.map(c => c.label)} onSubmit={handleAddCalculatedColumn} />
-        <KpiModal isOpen={isKpiModalOpen} onClose={() => setIsKpiModalOpen(false)} data={data} numericColumns={columnConfig.filter(c => c.isNumeric)} onSubmit={handleAddKpi} />
+        <KpiModal isOpen={isKpiModalOpen} onClose={() => { setIsKpiModalOpen(false); setEditingWidgetId(null); }} data={data} numericColumns={columnConfig.filter(c => c.isNumeric)} onSave={handleSaveKpi} initialConfig={widgetToEdit?.type === 'kpi' ? widgetToEdit.config : undefined} />
         <LoadDashboardModal isOpen={isLoadModalOpen} onClose={() => setIsLoadModalOpen(false)} dashboards={savedDashboards} onLoad={handleLoadDashboard} onDelete={handleDeleteDashboard} />
         <SaveDashboardModal isOpen={isSaveModalOpen} onClose={() => setIsSaveModalOpen(false)} onSave={handleSaveDashboard} existingNames={savedDashboards.map(d => d.name)} />
         <SettingsModal 

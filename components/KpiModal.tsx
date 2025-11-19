@@ -2,8 +2,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Modal } from './Modal';
 import { ColumnConfig, Computation, KpiWidgetConfig, RowData } from '../types';
-import { KpiIcon } from './Icons';
-import { validateFormula } from '../utils/formulaEvaluator';
+import { KpiIcon, CheckIcon } from './Icons';
+import { validateFormula, tokenize } from '../utils/formulaEvaluator';
 import { calculateKpiValue } from '../utils/kpiEvaluator';
 
 interface KpiModalProps {
@@ -11,7 +11,8 @@ interface KpiModalProps {
   onClose: () => void;
   data: RowData[];
   numericColumns: ColumnConfig[];
-  onSubmit: (config: KpiWidgetConfig) => void;
+  onSave: (config: KpiWidgetConfig) => void;
+  initialConfig?: KpiWidgetConfig;
 }
 
 type FormulaToken = {
@@ -24,11 +25,13 @@ const operators = ['+', '-', '*', '/'];
 const numbers = ['7', '8', '9', '4', '5', '6', '1', '2', '3', '0', '.'];
 const computations: Computation[] = ['SUM', 'AVERAGE', 'MIN', 'MAX', 'COUNT'];
 
-const KpiModal: React.FC<KpiModalProps> = ({ isOpen, onClose, data, numericColumns, onSubmit }) => {
+const KpiModal: React.FC<KpiModalProps> = ({ isOpen, onClose, data, numericColumns, onSave, initialConfig }) => {
   const [title, setTitle] = useState('');
   const [formula, setFormula] = useState<FormulaToken[]>([]);
   const [selectedComputation, setSelectedComputation] = useState<Computation>('SUM');
   const [error, setError] = useState('');
+
+  const isEditing = !!initialConfig;
 
   const formulaString = useMemo(() => formula.map(t => t.value).join(' '), [formula]);
   const formulaDisplay = useMemo(() => formula.map(t => {
@@ -39,13 +42,41 @@ const KpiModal: React.FC<KpiModalProps> = ({ isOpen, onClose, data, numericColum
   }), [formula]);
 
    useEffect(() => {
-    if (!isOpen) {
-      setTitle('');
-      setFormula([]);
-      setSelectedComputation('SUM');
+    if (isOpen) {
+      if (initialConfig) {
+        setTitle(initialConfig.title);
+        setSelectedComputation(initialConfig.computation);
+        
+        // Rehydrate formula
+        try {
+            const tokens = tokenize(initialConfig.valueFormula); 
+            const parsedTokens: FormulaToken[] = tokens.map(t => {
+                if (t.startsWith('{') && t.endsWith('}')) {
+                    const id = t.slice(1, -1);
+                    const col = numericColumns.find(c => c.id === id);
+                    return { type: 'column', value: t, text: col ? col.label : '???' };
+                } else if (['+', '-', '*', '/'].includes(t)) {
+                    return { type: 'operator', value: t, text: t };
+                } else if (t === '(' || t === ')') {
+                    return { type: 'paren', value: t, text: t };
+                } else {
+                     // number
+                     return { type: 'number', value: t, text: t };
+                }
+            });
+            setFormula(parsedTokens);
+        } catch (e) {
+            console.error("Failed to hydrate formula", e);
+            setFormula([]);
+        }
+      } else {
+        setTitle('');
+        setFormula([]);
+        setSelectedComputation('SUM');
+      }
       setError('');
     }
-  }, [isOpen]);
+  }, [isOpen, initialConfig, numericColumns]);
 
   const livePreview = useMemo(() => {
     const validation = validateFormula(formulaString);
@@ -82,7 +113,7 @@ const KpiModal: React.FC<KpiModalProps> = ({ isOpen, onClose, data, numericColum
       setError(validation.error ?? 'The formula is invalid.');
       return;
     }
-    onSubmit({
+    onSave({
       title: title.trim(),
       valueFormula: formulaString,
       computation: selectedComputation,
@@ -91,7 +122,7 @@ const KpiModal: React.FC<KpiModalProps> = ({ isOpen, onClose, data, numericColum
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Create KPI Card" maxWidth="max-w-3xl">
+    <Modal isOpen={isOpen} onClose={onClose} title={isEditing ? "Edit KPI Card" : "Create KPI Card"} maxWidth="max-w-3xl">
       <div className="flex flex-col gap-6">
         <div>
           <label htmlFor="kpi-title" className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
@@ -177,7 +208,7 @@ const KpiModal: React.FC<KpiModalProps> = ({ isOpen, onClose, data, numericColum
             Cancel
           </button>
           <button type="button" onClick={handleSubmit} className="flex items-center gap-2 py-2 px-4 bg-[var(--bg-accent)] hover:bg-[var(--bg-accent-hover)] text-[var(--text-on-accent)] rounded-lg transition-colors font-semibold">
-            <KpiIcon /> Add KPI Card
+            {isEditing ? <CheckIcon /> : <KpiIcon />} {isEditing ? 'Save Changes' : 'Add KPI Card'}
           </button>
         </div>
       </div>

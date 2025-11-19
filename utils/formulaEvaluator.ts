@@ -1,3 +1,4 @@
+
 // A safe formula evaluator that respects order of operations.
 
 // Define operator precedence for PEMDAS/BODMAS
@@ -13,7 +14,7 @@ const precedence: Record<string, number> = {
  * This version handles unary minus signs correctly.
  * Example: "( {col_1} + -100 ) * -2" -> ["(", "{col_1}", "+", "-100", ")", "*", "-2"]
  */
-const tokenize = (formula: string): string[] => {
+export const tokenize = (formula: string): string[] => {
   // Use a regex that can identify numbers (including negatives), column placeholders, and operators
   const regex = /({[^}]+})|(-?\d*\.?\d+)|([+\-*/()])/g;
   const tokens: string[] = [];

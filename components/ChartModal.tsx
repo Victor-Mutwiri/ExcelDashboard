@@ -23,7 +23,7 @@ const ChartModal: React.FC<ChartModalProps> = ({ isOpen, onClose, data, columnCo
   const [chartTitle, setChartTitle] = useState('My Chart');
   const [seriesColors, setSeriesColors] = useState<Record<string, string>>({});
   const [valueColors, setValueColors] = useState<Record<string, string>>({});
-  const [seriesType, setSeriesType] = useState<Record<string, 'bar' | 'line'>>({});
+  const [seriesType, setSeriesType] = useState<Record<string, 'bar' | 'line' | 'area'>>({});
   const [showDataLabels, setShowDataLabels] = useState(false);
   const [refLine, setRefLine] = useState<{ enabled: boolean; label: string; value: number; color: string }>({
       enabled: false,
@@ -112,7 +112,7 @@ const ChartModal: React.FC<ChartModalProps> = ({ isOpen, onClose, data, columnCo
     setYAxisKeys(newKeys);
 
     const nextConfig: Record<string, Computation> = {};
-    const nextSeriesType: Record<string, 'bar' | 'line'> = {};
+    const nextSeriesType: Record<string, 'bar' | 'line' | 'area'> = {};
     for (const key of newKeys) {
         nextConfig[key] = seriesConfig[key] || 'SUM';
         nextSeriesType[key] = seriesType[key] || 'bar';
@@ -133,7 +133,7 @@ const ChartModal: React.FC<ChartModalProps> = ({ isOpen, onClose, data, columnCo
     setValueColors(prev => ({...prev, [value]: color}));
   };
 
-  const handleSeriesTypeChange = (key: string, type: 'bar' | 'line') => {
+  const handleSeriesTypeChange = (key: string, type: 'bar' | 'line' | 'area') => {
     setSeriesType(prev => ({...prev, [key]: type}));
   };
 
@@ -363,14 +363,15 @@ const ChartModal: React.FC<ChartModalProps> = ({ isOpen, onClose, data, columnCo
                           <option value="MIN">Min</option>
                           <option value="MAX">Max</option>
                         </select>
-                        {chartType === 'bar' && (
+                        {chartType !== 'pie' && (
                            <select 
                            value={seriesType[key] || 'bar'}
-                           onChange={(e) => handleSeriesTypeChange(key, e.target.value as 'bar' | 'line')}
+                           onChange={(e) => handleSeriesTypeChange(key, e.target.value as 'bar' | 'line' | 'area')}
                            className="bg-[var(--bg-input)] border border-[var(--border-color)] rounded-md px-2 py-1 text-sm focus:ring-1 focus:ring-[var(--ring-color)] focus:outline-none col-span-1"
                          >
                            <option value="bar">Bar</option>
                            <option value="line">Line</option>
+                           <option value="area">Area</option>
                          </select>
                         )}
                       </div>

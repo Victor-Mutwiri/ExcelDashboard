@@ -330,7 +330,7 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = ({ widget, data, columnConfi
   }
   const title = getTitle(widget);
 
-  const canEdit = ['chart', 'title', 'text', 'datatable', 'ai', 'pivot', 'rank'].includes(widget.type);
+  const canEdit = ['chart', 'title', 'text', 'datatable', 'ai', 'pivot', 'rank', 'kpi'].includes(widget.type);
 
   return (
     <div
