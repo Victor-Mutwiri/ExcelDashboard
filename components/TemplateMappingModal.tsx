@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from './Modal';
 import { DashboardTemplate, ColumnConfig } from '../types';
-import { CheckIcon, ChevronRightIcon, LayoutIcon } from './Icons';
+import { CheckIcon, ChevronRightIcon, LayoutIcon, SettingsIcon } from './Icons';
 
 interface TemplateMappingModalProps {
   isOpen: boolean;
@@ -14,11 +14,12 @@ interface TemplateMappingModalProps {
 
 const TemplateMappingModal: React.FC<TemplateMappingModalProps> = ({ isOpen, onClose, template, columnConfig, onConfirm }) => {
   const [mapping, setMapping] = useState<Record<string, string>>({});
+  const [customValues, setCustomValues] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<string[]>([]);
 
   useEffect(() => {
     if (isOpen && template) {
-      // Auto-match based on fuzzy name matching
+      // Auto-match based on fuzzy name matching for required fields
       const initialMapping: Record<string, string> = {};
       
       template.requiredFields.forEach(field => {
@@ -42,12 +43,26 @@ const TemplateMappingModal: React.FC<TemplateMappingModalProps> = ({ isOpen, onC
         }
       });
       setMapping(initialMapping);
+
+      // Initialize custom values
+      const initialCustomValues: Record<string, string> = {};
+      if (template.customFields) {
+        template.customFields.forEach(field => {
+            initialCustomValues[field.key] = field.defaultValue;
+        });
+      }
+      setCustomValues(initialCustomValues);
+
       setErrors([]);
     }
   }, [isOpen, template, columnConfig]);
 
   const handleMappingChange = (key: string, value: string) => {
     setMapping(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleCustomValueChange = (key: string, value: string) => {
+      setCustomValues(prev => ({ ...prev, [key]: value }));
   };
 
   const handleSubmit = () => {
@@ -60,12 +75,22 @@ const TemplateMappingModal: React.FC<TemplateMappingModalProps> = ({ isOpen, onC
         }
     });
 
+    if (template.customFields) {
+        template.customFields.forEach(field => {
+             if (!customValues[field.key]) {
+                 newErrors.push(`Please enter a value for "${field.label}"`);
+             }
+        });
+    }
+
     if (newErrors.length > 0) {
         setErrors(newErrors);
         return;
     }
 
-    onConfirm(mapping);
+    // Merge mapping and custom values into a single record
+    const finalMapping = { ...mapping, ...customValues };
+    onConfirm(finalMapping);
   };
 
   if (!template) return null;
@@ -86,6 +111,7 @@ const TemplateMappingModal: React.FC<TemplateMappingModalProps> = ({ isOpen, onC
         </div>
 
         <div className="space-y-4">
+            {/* Data Column Mapping */}
             {template.requiredFields.map((field) => {
                 const isMapped = !!mapping[field.key];
                 const columnsForType = columnConfig.filter(c => field.dataType === 'number' ? c.isNumeric : true);
@@ -116,6 +142,36 @@ const TemplateMappingModal: React.FC<TemplateMappingModalProps> = ({ isOpen, onC
                     </div>
                 );
             })}
+
+            {/* Custom Fields / Parameters */}
+            {template.customFields && template.customFields.length > 0 && (
+                <>
+                    <div className="my-4 flex items-center gap-2 text-[var(--text-secondary)] font-semibold border-b border-[var(--border-color)] pb-2">
+                        <SettingsIcon className="w-5 h-5" />
+                        <h4>Dashboard Parameters</h4>
+                    </div>
+                    {template.customFields.map((field) => (
+                        <div key={field.key} className="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 items-center p-3 border border-[var(--border-color)] rounded-lg bg-[var(--bg-input)]">
+                             <div className="md:col-span-5">
+                                <label className="font-semibold text-sm block">{field.label}</label>
+                                <span className="text-xs text-[var(--text-tertiary)]">Input value</span>
+                            </div>
+                            <div className="md:col-span-1 flex justify-center text-[var(--text-tertiary)]">
+                                <ChevronRightIcon className="w-5 h-5 rotate-90 md:rotate-0" />
+                            </div>
+                            <div className="md:col-span-6">
+                                <input 
+                                    type={field.inputType}
+                                    value={customValues[field.key] || ''}
+                                    onChange={(e) => handleCustomValueChange(field.key, e.target.value)}
+                                    className="w-full p-2 border border-[var(--border-color)] bg-[var(--bg-contrast)] rounded-md text-sm focus:ring-2 focus:ring-[var(--color-accent)] focus:outline-none"
+                                    placeholder={field.defaultValue}
+                                />
+                            </div>
+                        </div>
+                    ))}
+                </>
+            )}
         </div>
 
         {errors.length > 0 && (

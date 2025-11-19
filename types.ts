@@ -37,6 +37,12 @@ export interface BaseWidget {
 }
 
 // Chart Widget
+export interface ReferenceLineConfig {
+  label: string;
+  value: number | string; // Allow string for template placeholders or expressions
+  color: string;
+}
+
 export interface ChartWidgetConfig {
   chartType: ChartType;
   xAxisKey: string;
@@ -46,12 +52,10 @@ export interface ChartWidgetConfig {
   seriesColors: Record<string, string>;
   valueColors?: Record<string, string>;
   seriesType?: Record<string, 'bar' | 'line' | 'area'>;
+  axisConfig?: Record<string, 'left' | 'right'>; // Map series key to axis ID
   showDataLabels?: boolean;
-  referenceLine?: {
-    label: string;
-    value: number;
-    color: string;
-  };
+  referenceLine?: ReferenceLineConfig; // Legacy support
+  referenceLines?: ReferenceLineConfig[]; // New support for multiple lines
 }
 export interface ChartWidget extends BaseWidget {
   type: 'chart';
@@ -168,6 +172,13 @@ export interface TemplateField {
   optional?: boolean;
 }
 
+export interface TemplateCustomField {
+  key: string;
+  label: string;
+  defaultValue: string;
+  inputType: 'number' | 'text';
+}
+
 export interface DashboardTemplate {
   id: string;
   name: string;
@@ -175,6 +186,7 @@ export interface DashboardTemplate {
   category: 'Sales' | 'Finance' | 'Marketing' | 'HR' | 'Operations' | 'Support' | 'E-commerce' | 'Project' | 'General';
   iconName: string; // String reference to an icon component
   requiredFields: TemplateField[];
+  customFields?: TemplateCustomField[]; // New: For manual inputs like Capital, Targets
   widgets: AnyWidget[]; // Configs contain placeholders like "{{revenue}}"
 }
 

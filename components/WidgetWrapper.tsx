@@ -51,6 +51,20 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     return null;
 };
 
+// Helper to safely evaluate simple arithmetic strings for reference lines (e.g. "5000 + 1000")
+const safeEvaluate = (expression: string | number): number => {
+    if (typeof expression === 'number') return expression;
+    if (!expression) return 0;
+    try {
+        // Sanitize: only allow numbers, +, -, *, /, ., (, )
+        const sanitized = expression.replace(/[^0-9+\-*/.() ]/g, '');
+        // eslint-disable-next-line no-new-func
+        return new Function('return ' + sanitized)();
+    } catch {
+        return 0;
+    }
+};
+
 const TitleRenderer: React.FC<{ widget: TitleWidget }> = ({ widget }) => {
   const { config } = widget;
   const { text, fontFamily, fontSize, textAlign } = config;
@@ -76,7 +90,7 @@ const TitleRenderer: React.FC<{ widget: TitleWidget }> = ({ widget }) => {
 
 const ChartRenderer: React.FC<{ widget: ChartWidget; data: RowData[]; chartColors: string[] }> = ({ widget, data, chartColors }) => {
   const { config } = widget;
-  const { chartType, xAxisKey, yAxisKeys = [], seriesConfig, seriesColors, valueColors, seriesType = {}, referenceLine, showDataLabels } = config;
+  const { chartType, xAxisKey, yAxisKeys = [], seriesConfig, seriesColors, valueColors, seriesType = {}, referenceLine, referenceLines, axisConfig = {}, showDataLabels } = config;
 
   const aggregatedData = useMemo(() => {
     if (!xAxisKey || yAxisKeys.length === 0) return [];
@@ -116,8 +130,8 @@ const ChartRenderer: React.FC<{ widget: ChartWidget; data: RowData[]; chartColor
   const isPieWithNegativeValues = chartType === 'pie' && yAxisKeys.length > 0 && aggregatedData.some(d => (d[yAxisKeys[0]] as number) < 0);
 
   const hasLineSeries = yAxisKeys.some(k => seriesType[k] === 'line');
-  const effectiveChartType = hasLineSeries ? 'bar' : chartType;
-  const lineSeriesKeys = yAxisKeys.filter(k => seriesType[k] === 'line');
+  // Effective chart type: if mixing types, usually default to Bar or Area as base
+  const effectiveChartType = (hasLineSeries && chartType === 'line') ? 'bar' : chartType;
 
   const ChartComponent = { bar: BarChart, line: LineChart, area: AreaChart, pie: PieChart }[effectiveChartType];
   const dataLabelFormatter = (value: number) => value.toLocaleString(undefined, { maximumFractionDigits: 3 });
@@ -125,13 +139,24 @@ const ChartRenderer: React.FC<{ widget: ChartWidget; data: RowData[]; chartColor
   const yAxisDomain: any = [
     (dataMin: number) => {
         const min = Number.isFinite(dataMin) ? dataMin : 0;
-        return Math.floor(Math.min(0, min) * 1.1);
+        // If min is positive, start at 0 for bars/areas generally, unless it's huge
+        // For trading equity curves, auto-scaling is better if start > 0
+        return 'auto'; 
     },
     (dataMax: number) => {
         const max = Number.isFinite(dataMax) ? dataMax : 0;
-        return Math.ceil(Math.max(0, max) * 1.1);
+        return 'auto';
     }
   ];
+
+  // Collect all reference lines (legacy single + new array)
+  const allReferenceLines = [
+      ...(referenceLine ? [referenceLine] : []),
+      ...(referenceLines || [])
+  ];
+  
+  // Determine usage of Right Axis
+  const usesRightAxis = yAxisKeys.some(key => axisConfig[key] === 'right');
 
   return (
     <>
@@ -165,25 +190,57 @@ const ChartRenderer: React.FC<{ widget: ChartWidget; data: RowData[]; chartColor
             <ChartComponent data={aggregatedData}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
               <XAxis dataKey={xAxisKey} stroke="var(--text-secondary)" tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} interval={0} angle={-45} textAnchor="end" height={100} />
-              <YAxis yAxisId="left" orientation="left" stroke="var(--text-secondary)" tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} domain={yAxisDomain} />
-              {hasLineSeries && <YAxis yAxisId="right" orientation="right" stroke={seriesColors[lineSeriesKeys[0]] || '#82ca9d'} tick={{ fill: seriesColors[lineSeriesKeys[0]] || '#82ca9d', fontSize: 12 }} domain={yAxisDomain} />}
+              
+              <YAxis 
+                yAxisId="left" 
+                orientation="left" 
+                stroke="var(--text-secondary)" 
+                tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} 
+                domain={['auto', 'auto']} 
+              />
+              
+              {usesRightAxis && (
+                 <YAxis 
+                    yAxisId="right" 
+                    orientation="right" 
+                    stroke="var(--text-secondary)" 
+                    tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} 
+                    domain={['auto', 'auto']} 
+                />
+              )}
+
               <Tooltip content={<CustomTooltip />} />
               <Legend />
-              {referenceLine && <ReferenceLine yAxisId="left" y={referenceLine.value} label={referenceLine.label} stroke={referenceLine.color} strokeDasharray="3 3" />}
+              
+              {allReferenceLines.map((ref, i) => (
+                  <ReferenceLine 
+                    key={i} 
+                    yAxisId="left" 
+                    y={safeEvaluate(ref.value)} 
+                    label={{ position: 'top', value: ref.label, fill: ref.color, fontSize: 12 }} 
+                    stroke={ref.color} 
+                    strokeDasharray="3 3" 
+                  />
+              ))}
+
               {yAxisKeys.map((key, index) => {
                   const type = seriesType[key];
                   const color = seriesColors[key] || chartColors[index % chartColors.length];
+                  const axisId = axisConfig[key] || 'left';
                   
-                  if (hasLineSeries && type === 'line') {
-                      return <Line key={key} yAxisId="right" type="monotone" dataKey={key} stroke={color} strokeWidth={2}>
+                  // Logic: If specific type set, use it. If not, fallback to main chart type.
+                  // Special case: If chart is 'line', only Lines. If 'bar', only Bars. 
+                  // 'area' chart can host Area, Line, and Bar components in Recharts ComposedChart logic (using AreaChart as base works for this).
+
+                  if (type === 'line' || (!type && chartType === 'line')) {
+                      return <Line key={key} yAxisId={axisId} type="monotone" dataKey={key} stroke={color} strokeWidth={2}>
                         {showDataLabels && <LabelList dataKey={key} position="top" fill="var(--text-secondary)" fontSize={12} formatter={dataLabelFormatter} />}
                       </Line>;
                   }
 
-                  const isBar = (hasLineSeries && type === 'bar') || chartType === 'bar';
-                  if (isBar) {
+                  if (type === 'bar' || (!type && chartType === 'bar')) {
                       return (
-                          <Bar key={key} yAxisId="left" dataKey={key} fill={color}>
+                          <Bar key={key} yAxisId={axisId} dataKey={key} fill={color}>
                               {showDataLabels && <LabelList dataKey={key} position="top" fill="var(--text-secondary)" fontSize={12} formatter={dataLabelFormatter} />}
                               {valueColors && Object.keys(valueColors).length > 0
                                   ? aggregatedData.map((entry) => {
@@ -196,13 +253,8 @@ const ChartRenderer: React.FC<{ widget: ChartWidget; data: RowData[]; chartColor
                       );
                   }
 
-                  if (chartType === 'line') {
-                      return <Line key={key} yAxisId="left" type="monotone" dataKey={key} stroke={color}>
-                        {showDataLabels && <LabelList dataKey={key} position="top" fill="var(--text-secondary)" fontSize={12} formatter={dataLabelFormatter} />}
-                      </Line>;
-                  }
-                  if (chartType === 'area') {
-                      return <Area key={key} yAxisId="left" type="monotone" dataKey={key} stroke={color} fill={color} fillOpacity={0.6} strokeWidth={2}>
+                  if (type === 'area' || (!type && chartType === 'area')) {
+                      return <Area key={key} yAxisId={axisId} type="monotone" dataKey={key} stroke={color} fill={color} fillOpacity={0.6} strokeWidth={2}>
                         {showDataLabels && <LabelList dataKey={key} position="top" fill="var(--text-secondary)" fontSize={12} formatter={dataLabelFormatter} />}
                       </Area>;
                   }

@@ -165,6 +165,11 @@ export const dashboardTemplates: DashboardTemplate[] = [
         { key: 'rr', label: 'Risk:Reward Ratio', dataType: 'number', optional: true },
         { key: 'balance', label: 'Account Balance', dataType: 'number', optional: true },
       ],
+      customFields: [
+        { key: 'starting_capital', label: 'Starting Capital', defaultValue: '100000', inputType: 'number' },
+        { key: 'profit_target', label: 'Profit Target', defaultValue: '10000', inputType: 'number' },
+        { key: 'drawdown_limit', label: 'Drawdown Limit', defaultValue: '5000', inputType: 'number' }
+      ],
       widgets: [
         {
           id: 'tr-title',
@@ -172,33 +177,24 @@ export const dashboardTemplates: DashboardTemplate[] = [
           size: 'full',
           config: { text: 'Trading Performance Dashboard', fontFamily: 'Oswald', fontSize: 32, textAlign: 'left' }
         },
-        {
-          id: 'tr-text-setup',
-          type: 'text',
-          size: 'full',
-          config: { 
-              title: '⚙️ Setup Instructions', 
-              content: '**How to configure your Prop Firm targets:**\n\n1. Click the **Edit (Pencil)** icon on the "Starting Capital", "Profit Target", and "Drawdown Limit" cards below.\n2. Change the formula to your specific number (e.g., replace `0` with `100000`).\n3. Click Save.' 
-          }
-        },
         // Prop Firm Setup Row
         {
           id: 'tr-kpi-cap',
           type: 'kpi',
           size: '1/4',
-          config: { title: 'Starting Capital', valueFormula: '100000', computation: 'MAX' } // User to edit
+          config: { title: 'Starting Capital', valueFormula: '{{starting_capital}}', computation: 'MAX' }
         },
         {
           id: 'tr-kpi-target',
           type: 'kpi',
           size: '1/4',
-          config: { title: 'Profit Target ($)', valueFormula: '10000', computation: 'MAX' } // User to edit
+          config: { title: 'Profit Target ($)', valueFormula: '{{profit_target}}', computation: 'MAX' }
         },
         {
           id: 'tr-kpi-dd',
           type: 'kpi',
           size: '1/4',
-          config: { title: 'Max Drawdown ($)', valueFormula: '5000', computation: 'MAX' } // User to edit
+          config: { title: 'Max Drawdown ($)', valueFormula: '{{drawdown_limit}}', computation: 'MAX' }
         },
         {
           id: 'tr-kpi-current-pl',
@@ -215,12 +211,17 @@ export const dashboardTemplates: DashboardTemplate[] = [
             title: 'Account Progression & Target',
             chartType: 'area',
             xAxisKey: '{{date}}',
-            yAxisKeys: ['{{balance}}', '{{pl}}'], // Try to use balance if available, else P/L
+            yAxisKeys: ['{{balance}}', '{{pl}}'], 
             seriesConfig: { '{{balance}}': 'MAX', '{{pl}}': 'SUM' },
             seriesColors: { '{{balance}}': '#3b82f6', '{{pl}}': '#10b981' },
             seriesType: { '{{balance}}': 'area', '{{pl}}': 'bar' },
+            axisConfig: { '{{balance}}': 'left', '{{pl}}': 'right' }, // Separate axes
             showDataLabels: false,
-            referenceLine: { label: 'Profit Target', value: 10000, color: '#16a34a' }
+            referenceLines: [
+                { label: 'Initial Capital', value: '{{starting_capital}}', color: '#94a3b8' }, // Grey Baseline
+                { label: 'Profit Target', value: '{{starting_capital}} + {{profit_target}}', color: '#16a34a' }, // Green Target
+                { label: 'Max Loss', value: '{{starting_capital}} - {{drawdown_limit}}', color: '#ef4444' } // Red Drawdown Limit
+            ]
           }
         },
         {

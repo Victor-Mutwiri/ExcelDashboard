@@ -2,8 +2,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { ResponsiveContainer, BarChart, Bar, LineChart, Line, PieChart, Pie, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell, ReferenceLine, LabelList } from 'recharts';
 import { Modal } from './Modal';
-import { ColumnConfig, RowData, ChartType, Computation, ChartWidgetConfig } from '../types';
-import { ChartIcon, AreaChartIcon, CheckIcon, LineChartIcon, ColorSwatchIcon } from './Icons';
+import { ColumnConfig, RowData, ChartType, Computation, ChartWidgetConfig, ReferenceLineConfig } from '../types';
+import { ChartIcon, AreaChartIcon, CheckIcon, LineChartIcon, ColorSwatchIcon, PlusIcon, TrashIcon } from './Icons';
 
 interface ChartModalProps {
   isOpen: boolean;
@@ -24,13 +24,12 @@ const ChartModal: React.FC<ChartModalProps> = ({ isOpen, onClose, data, columnCo
   const [seriesColors, setSeriesColors] = useState<Record<string, string>>({});
   const [valueColors, setValueColors] = useState<Record<string, string>>({});
   const [seriesType, setSeriesType] = useState<Record<string, 'bar' | 'line' | 'area'>>({});
+  const [axisConfig, setAxisConfig] = useState<Record<string, 'left' | 'right'>>({});
   const [showDataLabels, setShowDataLabels] = useState(false);
-  const [refLine, setRefLine] = useState<{ enabled: boolean; label: string; value: number; color: string }>({
-      enabled: false,
-      label: 'Target',
-      value: 1000,
-      color: '#ff7300'
-  });
+  const [referenceLines, setReferenceLines] = useState<ReferenceLineConfig[]>([]);
+  
+  // Temp state for new reference line input
+  const [newRefLine, setNewRefLine] = useState<ReferenceLineConfig>({ label: '', value: 0, color: '#ff7300' });
 
   const isEditing = !!initialConfig;
 
@@ -55,8 +54,10 @@ const ChartModal: React.FC<ChartModalProps> = ({ isOpen, onClose, data, columnCo
     setSeriesColors({});
     setValueColors({});
     setSeriesType({});
+    setAxisConfig({});
     setShowDataLabels(false);
-    setRefLine({ enabled: false, label: 'Target', value: 1000, color: '#ff7300' });
+    setReferenceLines([]);
+    setNewRefLine({ label: 'Target', value: 0, color: '#ff7300' });
   };
 
   useEffect(() => {
@@ -70,12 +71,15 @@ const ChartModal: React.FC<ChartModalProps> = ({ isOpen, onClose, data, columnCo
         setSeriesColors(initialConfig.seriesColors);
         setValueColors(initialConfig.valueColors || {});
         setSeriesType(initialConfig.seriesType || {});
+        setAxisConfig(initialConfig.axisConfig || {});
         setShowDataLabels(initialConfig.showDataLabels ?? false);
+        
+        // Consolidate legacy referenceLine into referenceLines array
+        const lines = [...(initialConfig.referenceLines || [])];
         if (initialConfig.referenceLine) {
-            setRefLine({ enabled: true, ...initialConfig.referenceLine });
-        } else {
-            setRefLine({ enabled: false, label: 'Target', value: 1000, color: '#ff7300' });
+            lines.push(initialConfig.referenceLine);
         }
+        setReferenceLines(lines);
       } else {
         resetState();
       }
@@ -93,8 +97,9 @@ const ChartModal: React.FC<ChartModalProps> = ({ isOpen, onClose, data, columnCo
       seriesColors,
       valueColors,
       seriesType,
+      axisConfig,
       showDataLabels,
-      ...(refLine.enabled && { referenceLine: { label: refLine.label, value: refLine.value, color: refLine.color }})
+      referenceLines
     });
   };
 
@@ -113,12 +118,16 @@ const ChartModal: React.FC<ChartModalProps> = ({ isOpen, onClose, data, columnCo
 
     const nextConfig: Record<string, Computation> = {};
     const nextSeriesType: Record<string, 'bar' | 'line' | 'area'> = {};
+    const nextAxisConfig: Record<string, 'left' | 'right'> = {};
+    
     for (const key of newKeys) {
         nextConfig[key] = seriesConfig[key] || 'SUM';
         nextSeriesType[key] = seriesType[key] || 'bar';
+        nextAxisConfig[key] = axisConfig[key] || 'left';
     }
     setSeriesConfig(nextConfig);
     setSeriesType(nextSeriesType);
+    setAxisConfig(nextAxisConfig);
   };
   
   const handleAggregationChange = (key: string, aggregation: Computation) => {
@@ -135,6 +144,34 @@ const ChartModal: React.FC<ChartModalProps> = ({ isOpen, onClose, data, columnCo
 
   const handleSeriesTypeChange = (key: string, type: 'bar' | 'line' | 'area') => {
     setSeriesType(prev => ({...prev, [key]: type}));
+  };
+  
+  const handleAxisChange = (key: string, axis: 'left' | 'right') => {
+    setAxisConfig(prev => ({...prev, [key]: axis}));
+  }
+
+  const handleAddReferenceLine = () => {
+      if (newRefLine.label && newRefLine.value !== '') {
+          setReferenceLines(prev => [...prev, { ...newRefLine, value: Number(newRefLine.value) || 0 }]);
+          setNewRefLine({ label: '', value: 0, color: '#ff7300' });
+      }
+  };
+
+  const handleRemoveReferenceLine = (index: number) => {
+      setReferenceLines(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Safe evaluate for preview in modal
+  const safeEvaluate = (expression: string | number): number => {
+      if (typeof expression === 'number') return expression;
+      if (!expression) return 0;
+      try {
+          const sanitized = expression.replace(/[^0-9+\-*/.() ]/g, '');
+          // eslint-disable-next-line no-new-func
+          return new Function('return ' + sanitized)();
+      } catch {
+          return 0;
+      }
   };
 
   const aggregatedData = useMemo(() => {
@@ -219,7 +256,8 @@ const ChartModal: React.FC<ChartModalProps> = ({ isOpen, onClose, data, columnCo
     }[effectiveChartType];
 
     const hasLineSeries = yAxisKeys.some(k => seriesType[k] === 'line');
-    const lineSeriesKeys = yAxisKeys.filter(k => seriesType[k] === 'line');
+    // If we explicitly set an axis to 'right', we should render the right axis
+    const usesRightAxis = yAxisKeys.some(k => axisConfig[k] === 'right');
 
     const tooltipStyle = {
         backgroundColor: 'var(--bg-card)', 
@@ -229,16 +267,7 @@ const ChartModal: React.FC<ChartModalProps> = ({ isOpen, onClose, data, columnCo
 
     const dataLabelFormatter = (value: number) => value.toLocaleString(undefined, { maximumFractionDigits: 3 });
 
-    const yAxisDomain: any = [
-      (dataMin: number) => {
-          const min = Number.isFinite(dataMin) ? dataMin : 0;
-          return Math.floor(Math.min(0, min) * 1.1);
-      },
-      (dataMax: number) => {
-          const max = Number.isFinite(dataMax) ? dataMax : 0;
-          return Math.ceil(Math.max(0, max) * 1.1);
-      }
-    ];
+    const yAxisDomain: any = [ 'auto', 'auto' ];
 
     return (
       <ResponsiveContainer width="100%" height="100%">
@@ -264,24 +293,35 @@ const ChartModal: React.FC<ChartModalProps> = ({ isOpen, onClose, data, columnCo
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
             <XAxis dataKey={xAxisKey} stroke="var(--text-secondary)" interval={0} angle={-30} textAnchor="end" height={80} tick={{ fontSize: 11 }} />
             <YAxis yAxisId="left" orientation="left" stroke="var(--text-secondary)" domain={yAxisDomain} />
-            {hasLineSeries && <YAxis yAxisId="right" orientation="right" stroke={seriesColors[lineSeriesKeys[0]] || '#82ca9d'} domain={yAxisDomain} />}
+            {usesRightAxis && <YAxis yAxisId="right" orientation="right" stroke="var(--text-secondary)" domain={yAxisDomain} />}
             <Tooltip contentStyle={tooltipStyle} />
             <Legend />
-            {refLine.enabled && <ReferenceLine yAxisId="left" y={refLine.value} label={refLine.label} stroke={refLine.color} strokeDasharray="3 3" />}
+            
+            {referenceLines.map((ref, i) => (
+                <ReferenceLine 
+                    key={i} 
+                    yAxisId="left" 
+                    y={safeEvaluate(ref.value)} 
+                    label={{ position: 'top', value: ref.label, fill: ref.color, fontSize: 12 }} 
+                    stroke={ref.color} 
+                    strokeDasharray="3 3" 
+                />
+            ))}
+
             {yAxisKeys.map((key, index) => {
                 const type = seriesType[key];
                 const color = seriesColors[key] || chartColors[index % chartColors.length];
+                const axisId = axisConfig[key] || 'left';
 
-                if (hasLineSeries && type === 'line') {
-                    return <Line key={key} yAxisId="right" type="monotone" dataKey={key} stroke={color} strokeWidth={2}>
+                if (type === 'line' || (!type && chartType === 'line')) {
+                    return <Line key={key} yAxisId={axisId} type="monotone" dataKey={key} stroke={color} strokeWidth={2}>
                       {showDataLabels && <LabelList dataKey={key} position="top" fill="var(--text-secondary)" fontSize={11} formatter={dataLabelFormatter} />}
                     </Line>;
                 }
 
-                const isBar = (hasLineSeries && type === 'bar') || chartType === 'bar';
-                if (isBar) {
+                if (type === 'bar' || (!type && chartType === 'bar')) {
                     return (
-                        <Bar key={key} yAxisId="left" dataKey={key} fill={color}>
+                        <Bar key={key} yAxisId={axisId} dataKey={key} fill={color}>
                             {showDataLabels && <LabelList dataKey={key} position="top" fill="var(--text-secondary)" fontSize={11} formatter={dataLabelFormatter} />}
                             {aggregatedData.map((entry) => {
                                 const xValue = entry[xAxisKey] as string;
@@ -292,13 +332,8 @@ const ChartModal: React.FC<ChartModalProps> = ({ isOpen, onClose, data, columnCo
                     );
                 }
                 
-                if (chartType === 'line') {
-                  return <Line key={key} yAxisId="left" type="monotone" dataKey={key} stroke={color}>
-                    {showDataLabels && <LabelList dataKey={key} position="top" fill="var(--text-secondary)" fontSize={11} formatter={dataLabelFormatter} />}
-                  </Line>;
-                }
-                if (chartType === 'area') {
-                  return <Area key={key} yAxisId="left" type="monotone" dataKey={key} stroke={color} fill={color} fillOpacity={0.6} strokeWidth={2}>
+                if (type === 'area' || (!type && chartType === 'area')) {
+                  return <Area key={key} yAxisId={axisId} type="monotone" dataKey={key} stroke={color} fill={color} fillOpacity={0.6} strokeWidth={2}>
                     {showDataLabels && <LabelList dataKey={key} position="top" fill="var(--text-secondary)" fontSize={11} formatter={dataLabelFormatter} />}
                   </Area>;
                 }
@@ -350,16 +385,16 @@ const ChartModal: React.FC<ChartModalProps> = ({ isOpen, onClose, data, columnCo
                   <label className="font-medium text-sm text-[var(--text-secondary)] px-1">Series Config</label>
                   <div className="space-y-2 mt-2">
                     {yAxisKeys.map(key => (
-                      <div key={key} className="grid grid-cols-3 items-center justify-between gap-2 bg-[var(--bg-contrast)] p-1.5 rounded-md">
+                      <div key={key} className="grid grid-cols-4 items-center justify-between gap-2 bg-[var(--bg-contrast)] p-1.5 rounded-md">
                         <span className="text-sm text-[var(--text-secondary)] truncate px-1 col-span-1">{key}</span>
                         <select 
                           value={seriesConfig[key] || 'SUM'}
                           onChange={(e) => handleAggregationChange(key, e.target.value as Computation)}
-                          className="bg-[var(--bg-input)] border border-[var(--border-color)] rounded-md px-2 py-1 text-sm focus:ring-1 focus:ring-[var(--ring-color)] focus:outline-none col-span-1"
+                          className="bg-[var(--bg-input)] border border-[var(--border-color)] rounded-md px-1 py-1 text-xs focus:ring-1 focus:ring-[var(--ring-color)] focus:outline-none col-span-1"
                         >
                           <option value="SUM">Sum</option>
-                          <option value="AVERAGE">Average</option>
-                          <option value="COUNT">Count</option>
+                          <option value="AVERAGE">Avg</option>
+                          <option value="COUNT">Cnt</option>
                           <option value="MIN">Min</option>
                           <option value="MAX">Max</option>
                         </select>
@@ -367,11 +402,21 @@ const ChartModal: React.FC<ChartModalProps> = ({ isOpen, onClose, data, columnCo
                            <select 
                            value={seriesType[key] || 'bar'}
                            onChange={(e) => handleSeriesTypeChange(key, e.target.value as 'bar' | 'line' | 'area')}
-                           className="bg-[var(--bg-input)] border border-[var(--border-color)] rounded-md px-2 py-1 text-sm focus:ring-1 focus:ring-[var(--ring-color)] focus:outline-none col-span-1"
+                           className="bg-[var(--bg-input)] border border-[var(--border-color)] rounded-md px-1 py-1 text-xs focus:ring-1 focus:ring-[var(--ring-color)] focus:outline-none col-span-1"
                          >
                            <option value="bar">Bar</option>
                            <option value="line">Line</option>
                            <option value="area">Area</option>
+                         </select>
+                        )}
+                         {chartType !== 'pie' && (
+                           <select 
+                           value={axisConfig[key] || 'left'}
+                           onChange={(e) => handleAxisChange(key, e.target.value as 'left' | 'right')}
+                           className="bg-[var(--bg-input)] border border-[var(--border-color)] rounded-md px-1 py-1 text-xs focus:ring-1 focus:ring-[var(--ring-color)] focus:outline-none col-span-1"
+                         >
+                           <option value="left">L-Axis</option>
+                           <option value="right">R-Axis</option>
                          </select>
                         )}
                       </div>
@@ -418,23 +463,37 @@ const ChartModal: React.FC<ChartModalProps> = ({ isOpen, onClose, data, columnCo
                         </div>
                     </div>
                 )}
+                {/* Reference Lines */}
+                <div className="pt-3 mt-3 border-t border-[var(--border-color)]">
+                    <h4 className="flex items-center gap-2 text-sm font-medium text-[var(--text-secondary)] mb-2">
+                        Reference Lines
+                    </h4>
+                    <div className="space-y-2">
+                        {referenceLines.map((ref, idx) => (
+                            <div key={idx} className="flex items-center justify-between bg-[var(--bg-contrast)] p-1.5 rounded text-sm">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: ref.color }}></div>
+                                    <span>{ref.label} ({ref.value})</span>
+                                </div>
+                                <button onClick={() => handleRemoveReferenceLine(idx)} className="text-red-500 hover:text-red-700"><TrashIcon className="w-4 h-4"/></button>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 mt-2">
+                         <input type="text" value={newRefLine.label} onChange={e => setNewRefLine(prev => ({...prev, label: e.target.value}))} placeholder="Label" className="bg-[var(--bg-input)] border border-[var(--border-color)] rounded px-2 py-1 text-xs" />
+                         <input type="number" value={newRefLine.value} onChange={e => setNewRefLine(prev => ({...prev, value: e.target.value}))} placeholder="Value" className="bg-[var(--bg-input)] border border-[var(--border-color)] rounded px-2 py-1 text-xs" />
+                         <div className="flex gap-1">
+                            <input type="color" value={newRefLine.color} onChange={e => setNewRefLine(prev => ({...prev, color: e.target.value}))} className="w-8 h-8 p-0 border-none rounded cursor-pointer" />
+                            <button onClick={handleAddReferenceLine} className="flex-grow bg-[var(--bg-accent)] text-white rounded flex items-center justify-center"><PlusIcon className="w-4 h-4"/></button>
+                         </div>
+                    </div>
+                </div>
                 {/* Chart Options */}
                 <div className="pt-3 mt-3 border-t border-[var(--border-color)] space-y-2">
                     <label className="flex items-center gap-2 cursor-pointer" data-tooltip="Display the exact value on top of each bar, line point, or area segment.">
                         <input type="checkbox" checked={showDataLabels} onChange={e => setShowDataLabels(e.target.checked)} className="form-checkbox h-4 w-4 rounded bg-[var(--bg-input)] border-[var(--border-color)] text-[var(--bg-accent)] focus:ring-[var(--ring-color)]" />
                         <span>Show Data Labels</span>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer" data-tooltip="Add a horizontal line to the chart to indicate a target, average, or threshold.">
-                        <input type="checkbox" checked={refLine.enabled} onChange={e => setRefLine(prev => ({ ...prev, enabled: e.target.checked }))} className="form-checkbox h-4 w-4 rounded bg-[var(--bg-input)] border-[var(--border-color)] text-[var(--bg-accent)] focus:ring-[var(--ring-color)]" />
-                        <span>Add Reference Line</span>
-                    </label>
-                    {refLine.enabled && (
-                        <div className="mt-2 space-y-2 pl-6">
-                            <input type="text" value={refLine.label} onChange={e => setRefLine(prev => ({...prev, label: e.target.value}))} placeholder="Line Label" className="w-full bg-[var(--bg-input)] border border-[var(--border-color)] rounded-md px-3 py-1 text-sm" />
-                            <input type="number" value={refLine.value} onChange={e => setRefLine(prev => ({...prev, value: parseFloat(e.target.value) || 0}))} placeholder="Value" className="w-full bg-[var(--bg-input)] border border-[var(--border-color)] rounded-md px-3 py-1 text-sm" />
-                            <input type="color" value={refLine.color} onChange={e => setRefLine(prev => ({...prev, color: e.target.value}))} className="w-full h-8 p-0 bg-transparent border border-[var(--border-color)] rounded-md cursor-pointer" />
-                        </div>
-                    )}
                 </div>
               </div>
             </div>
