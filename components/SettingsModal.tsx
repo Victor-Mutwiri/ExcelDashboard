@@ -1,10 +1,8 @@
 
-
-
 import React, { useState, useEffect } from 'react';
 import { Modal } from './Modal';
 import { AIServiceConfig, AIServiceProvider } from '../types';
-import { SaveIcon, PlusIcon, TrashIcon, EyeIcon, EyeOffIcon, SparklesIcon, PaintBrushIcon } from './Icons';
+import { SaveIcon, PlusIcon, TrashIcon, EyeIcon, EyeOffIcon, SparklesIcon, PaintBrushIcon, UserIcon } from './Icons';
 import { themes, ThemeName } from '../themes';
 
 interface SettingsModalProps {
@@ -14,6 +12,7 @@ interface SettingsModalProps {
   initialConfigs: AIServiceConfig[];
   currentTheme: ThemeName;
   onThemeChange: (theme: ThemeName) => void;
+  onDeleteAccount: () => void;
 }
 
 const providerNames: Record<AIServiceProvider, string> = {
@@ -33,17 +32,19 @@ const getModelPlaceholder = (provider: AIServiceProvider) => {
     }
 }
 
-const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onSave, initialConfigs, currentTheme, onThemeChange }) => {
+const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onSave, initialConfigs, currentTheme, onThemeChange, onDeleteAccount }) => {
   const [configs, setConfigs] = useState<AIServiceConfig[]>([]);
   const [apiKeysVisible, setApiKeysVisible] = useState<Record<string, boolean>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [activeTab, setActiveTab] = useState('ai');
+  const [deleteConfirmation, setDeleteConfirmation] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setConfigs(JSON.parse(JSON.stringify(initialConfigs)));
       setErrors({});
       setActiveTab('ai');
+      setDeleteConfirmation(false);
     }
   }, [isOpen, initialConfigs]);
 
@@ -126,6 +127,17 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onSave, 
               >
                 <PaintBrushIcon className="w-5 h-5" />
                 Appearance
+              </button>
+              <button
+                onClick={() => setActiveTab('account')}
+                className={`flex items-center gap-3 w-full text-left p-2 rounded-md transition-colors ${
+                  activeTab === 'account'
+                    ? 'bg-[var(--bg-accent)] text-[var(--text-on-accent)] font-semibold'
+                    : 'hover:bg-[var(--bg-contrast)]'
+                }`}
+              >
+                <UserIcon className="w-5 h-5" />
+                Account
               </button>
             </nav>
           </aside>
@@ -244,12 +256,61 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onSave, 
                 </div>
               </div>
             )}
+            {activeTab === 'account' && (
+                <div className="flex flex-col gap-4 h-full">
+                    <div>
+                        <h3 className="text-xl font-bold mb-1">Account Management</h3>
+                        <p className="text-[var(--text-secondary)] text-sm">
+                            Manage your account and data preferences.
+                        </p>
+                    </div>
+                    
+                    <div className="mt-8 border border-red-500/30 bg-red-500/5 rounded-lg p-6">
+                        <h4 className="text-red-600 font-bold text-lg mb-2 flex items-center gap-2">
+                             Danger Zone
+                        </h4>
+                        <p className="text-sm text-[var(--text-secondary)] mb-6">
+                            Deleting your account is irreversible. All your saved dashboards, settings, and data will be permanently removed from this device and you will be signed out.
+                        </p>
+                        
+                        {!deleteConfirmation ? (
+                             <button 
+                                onClick={() => setDeleteConfirmation(true)}
+                                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors shadow-md"
+                            >
+                                Delete Account
+                            </button>
+                        ) : (
+                            <div className="bg-[var(--bg-card)] p-4 rounded-lg border border-red-500/20 shadow-lg animate-in fade-in zoom-in duration-200">
+                                <p className="font-bold text-[var(--text-primary)] mb-2">Are you absolutely sure?</p>
+                                <p className="text-sm text-[var(--text-secondary)] mb-4">
+                                    This action cannot be undone. Your data will be lost.
+                                </p>
+                                <div className="flex gap-3">
+                                    <button 
+                                        onClick={onDeleteAccount}
+                                        className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition-colors"
+                                    >
+                                        Yes, Delete My Account
+                                    </button>
+                                    <button 
+                                        onClick={() => setDeleteConfirmation(false)}
+                                        className="px-4 py-2 bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] text-[var(--text-primary)] font-semibold rounded-lg transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
           </main>
         </div>
 
         <div className="flex justify-end gap-4 mt-6 pt-4 border-t border-[var(--border-color)]">
           <button type="button" onClick={onClose} className="py-2 px-4 bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg transition-colors">
-            Cancel
+            Close
           </button>
           {activeTab === 'ai' && (
             <button type="button" onClick={handleSave} className="flex items-center gap-2 py-2 px-4 bg-[var(--bg-accent)] hover:bg-[var(--bg-accent-hover)] text-[var(--text-on-accent)] rounded-lg transition-colors font-semibold">

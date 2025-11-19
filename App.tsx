@@ -1,6 +1,4 @@
 
-
-
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { AppState, ColumnConfig, RowData, ParsedFile, SavedDashboard, AnyWidget, ChartWidgetConfig, KpiWidgetConfig, WidgetSize, TextWidgetConfig, TitleWidgetConfig, AIServiceConfig, AIInsightWidget, StructuredInsight, PivotWidgetConfig, RankWidgetConfig } from './types';
 import { Analytics } from "@vercel/analytics/react";
@@ -85,6 +83,7 @@ export default function App() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [authActionCallback, setAuthActionCallback] = useState<(() => void) | null>(null);
+  const [isAccountDeleting, setIsAccountDeleting] = useState(false);
 
   // Persisted States
   const [savedDashboards, setSavedDashboards] = useState<SavedDashboard[]>([]);
@@ -171,6 +170,39 @@ export default function App() {
     setIsPreviewMode(false);
     setShowLandingPage(false); 
   }, []);
+
+  const handleDeleteAccount = async () => {
+    // 1. Trigger visual effect
+    setIsAccountDeleting(true);
+    setIsSettingsModalOpen(false); // Close modal immediately to show effect
+
+    // 2. Wait for dramatic effect (1.5s)
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    // 3. Perform cleanup
+    try {
+        // Clear local app data
+        localStorage.removeItem(SESSION_STORAGE_KEY);
+        localStorage.removeItem('dashboards');
+        localStorage.removeItem('ai_settings');
+        localStorage.removeItem('dashboard-theme');
+        
+        // Sign out from Supabase (effectively "deleting" access for this session context)
+        await signOut();
+        
+        // Reset internal state
+        handleReset();
+        
+        // Go back to landing page
+        setShowLandingPage(true);
+        
+    } catch (error) {
+        console.error("Error during account deletion process:", error);
+    } finally {
+        setIsAccountDeleting(false);
+        setToast({ message: "Your account has been deleted.", type: 'success' });
+    }
+  };
   
   const handleSheetSelected = useCallback((sheetName: string, file: ParsedFile | null = parsedFile) => {
     if (!file) return;
@@ -538,6 +570,9 @@ export default function App() {
 
   return (
     <div className={rootContainerClasses}>
+      {/* Account Deletion Overlay Effect */}
+      <div className={`fixed inset-0 bg-red-600 z-[9999] pointer-events-none mix-blend-multiply transition-opacity duration-1000 ease-out ${isAccountDeleting ? 'opacity-100' : 'opacity-0'}`}></div>
+      
       {renderContent()}
       
       {/* All modals remain here as they are global overlays */}
@@ -552,7 +587,15 @@ export default function App() {
         <KpiModal isOpen={isKpiModalOpen} onClose={() => setIsKpiModalOpen(false)} data={data} numericColumns={columnConfig.filter(c => c.isNumeric)} onSubmit={handleAddKpi} />
         <LoadDashboardModal isOpen={isLoadModalOpen} onClose={() => setIsLoadModalOpen(false)} dashboards={savedDashboards} onLoad={handleLoadDashboard} onDelete={handleDeleteDashboard} />
         <SaveDashboardModal isOpen={isSaveModalOpen} onClose={() => setIsSaveModalOpen(false)} onSave={handleSaveDashboard} existingNames={savedDashboards.map(d => d.name)} />
-        <SettingsModal isOpen={isSettingsModalOpen} onClose={() => setIsSettingsModalOpen(false)} onSave={handleSaveAiSettings} initialConfigs={aiSettings} currentTheme={theme} onThemeChange={setTheme} />
+        <SettingsModal 
+            isOpen={isSettingsModalOpen} 
+            onClose={() => setIsSettingsModalOpen(false)} 
+            onSave={handleSaveAiSettings} 
+            initialConfigs={aiSettings} 
+            currentTheme={theme} 
+            onThemeChange={setTheme}
+            onDeleteAccount={handleDeleteAccount} 
+        />
         <TitleEditModal isOpen={isTitleEditModalOpen} onClose={() => { setIsTitleEditModalOpen(false); setEditingWidgetId(null); }} onSave={handleSaveWidgetTitle} initialTitle={getWidgetTitleForEdit(widgetToEdit)} />
         <ManageHiddenWidgetsModal isOpen={isManageHiddenOpen} onClose={() => setIsManageHiddenOpen(false)} hiddenWidgets={hiddenWidgets} onToggleVisibility={handleToggleWidgetVisibility} />
         <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onSuccess={handleAuthSuccess} />
