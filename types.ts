@@ -157,6 +157,7 @@ export interface SavedDashboard {
   columnConfig: ColumnConfig[];
   fileName: string;
   widgets: AnyWidget[];
+  backgroundColor?: string;
 }
 
 // --- AI SETTINGS ---

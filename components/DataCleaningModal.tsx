@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Modal } from './Modal';
 import { RowData, ColumnConfig } from '../types';
@@ -56,7 +55,7 @@ const DataCleaningModal: React.FC<DataCleaningModalProps> = ({ isOpen, onClose, 
 
   const handleApplyMissing = () => {
     let newData = [...tempData];
-    Object.entries(missingStrategies).forEach(([colLabel, strategy]) => {
+    (Object.entries(missingStrategies) as [string, MissingValueStrategy][]).forEach(([colLabel, strategy]) => {
       newData = fillMissingValues(newData, colLabel, strategy, columnConfig.filter(c => c.isNumeric));
     });
     setTempData(newData);
@@ -68,7 +67,7 @@ const DataCleaningModal: React.FC<DataCleaningModalProps> = ({ isOpen, onClose, 
 
   const handleApplyFormatting = () => {
     let newData = [...tempData];
-    Object.entries(formatOperations).forEach(([colLabel, type]) => {
+    (Object.entries(formatOperations) as [string, TextFormatType][]).forEach(([colLabel, type]) => {
       newData = formatTextColumn(newData, colLabel, type);
     });
     setTempData(newData);
@@ -230,26 +229,18 @@ const DataCleaningModal: React.FC<DataCleaningModalProps> = ({ isOpen, onClose, 
                     </button>
                  </div>
                )}
-             </div>
+            </div>
           )}
         </div>
-
-        {/* Footer */}
-        <div className="flex justify-between items-center pt-4 border-t border-[var(--border-color)] mt-2">
-          <div className="text-sm">
-            <span className="font-semibold">{tempData.length}</span> rows remaining
-            {tempData.length !== data.length && (
-               <span className="text-red-500 ml-2">(-{data.length - tempData.length} removed)</span>
-            )}
-          </div>
-          <div className="flex gap-3">
-            <button onClick={onClose} className="px-4 py-2 bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg transition-colors">
-                Cancel
-            </button>
-            <button onClick={handleSave} className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold transition-colors">
-                <CheckIcon /> Done
-            </button>
-          </div>
+        
+        {/* Footer Actions */}
+        <div className="flex justify-end gap-4 mt-4 pt-4 border-t border-[var(--border-color)]">
+             <button onClick={onClose} className="py-2 px-4 bg-[var(--bg-contrast)] hover:bg-[var(--bg-contrast-hover)] rounded-lg transition-colors">
+                 Cancel
+             </button>
+             <button onClick={handleSave} className="flex items-center gap-2 py-2 px-4 bg-[var(--bg-accent)] hover:bg-[var(--bg-accent-hover)] text-[var(--text-on-accent)] rounded-lg transition-colors font-semibold">
+                 <CheckIcon /> Done
+             </button>
         </div>
       </div>
     </Modal>

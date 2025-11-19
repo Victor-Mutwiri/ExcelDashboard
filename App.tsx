@@ -1,4 +1,6 @@
 
+
+
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { AppState, ColumnConfig, RowData, ParsedFile, SavedDashboard, AnyWidget, ChartWidgetConfig, KpiWidgetConfig, WidgetSize, TextWidgetConfig, TitleWidgetConfig, AIServiceConfig, AIInsightWidget, StructuredInsight, PivotWidgetConfig, RankWidgetConfig } from './types';
 import { Analytics } from "@vercel/analytics/react";
@@ -60,6 +62,7 @@ export default function App() {
   const [columnConfig, setColumnConfig] = useState<ColumnConfig[]>(initialSession?.columnConfig ?? []);
   const [data, setData] = useState<RowData[]>(initialSession?.data ?? []);
   const [widgets, setWidgets] = useState<AnyWidget[]>(initialSession?.widgets ?? []);
+  const [dashboardBackgroundColor, setDashboardBackgroundColor] = useState<string>(initialSession?.dashboardBackgroundColor ?? '');
 
   // Modal States
   const [isChartModalOpen, setIsChartModalOpen] = useState(false);
@@ -100,7 +103,8 @@ export default function App() {
       selectedSheet,
       columnConfig,
       data,
-      widgets
+      widgets,
+      dashboardBackgroundColor
     };
 
     try {
@@ -108,7 +112,7 @@ export default function App() {
     } catch (e) {
       console.warn('Failed to save session to local storage (possibly quota exceeded):', e);
     }
-  }, [showLandingPage, appState, fileName, parsedFile, selectedSheet, columnConfig, data, widgets]);
+  }, [showLandingPage, appState, fileName, parsedFile, selectedSheet, columnConfig, data, widgets, dashboardBackgroundColor]);
 
   // Effect for Print Preview
   useEffect(() => {
@@ -163,6 +167,7 @@ export default function App() {
     setColumnConfig([]);
     setData([]);
     setWidgets([]);
+    setDashboardBackgroundColor('');
     setIsPreviewMode(false);
     setShowLandingPage(false); 
   }, []);
@@ -262,7 +267,15 @@ export default function App() {
   }, [columnConfig, appState]);
 
   const handleSaveDashboard = (name: string) => {
-    const newDashboard: SavedDashboard = { name, createdAt: new Date().toISOString(), data, columnConfig, fileName, widgets };
+    const newDashboard: SavedDashboard = { 
+        name, 
+        createdAt: new Date().toISOString(), 
+        data, 
+        columnConfig, 
+        fileName, 
+        widgets,
+        backgroundColor: dashboardBackgroundColor 
+    };
     const updatedDashboards = [...savedDashboards, newDashboard];
     setSavedDashboards(updatedDashboards);
     localStorage.setItem('dashboards', JSON.stringify(updatedDashboards));
@@ -275,6 +288,7 @@ export default function App() {
     setColumnConfig(dashboard.columnConfig);
     setData(dashboard.data);
     setWidgets(dashboard.widgets);
+    setDashboardBackgroundColor(dashboard.backgroundColor || '');
     setParsedFile({ sheets: { 'Loaded Sheet': [] }, isExcel: false }); // Mock parsedFile to disable re-config
     setSelectedSheet('Loaded Sheet');
     setAppState('DASHBOARD');
@@ -478,7 +492,7 @@ export default function App() {
                   selectedSheet={selectedSheet} 
                   onSheetSelect={(sheet) => handleSheetSelected(sheet)} 
                   initialColumnConfig={columnConfig} 
-                  currentData={data} // Pass current data to persist cleaning
+                  currentData={data} 
                   onConfirm={handleConfigConfirmed} 
                   onReset={handleReset} 
                 />;
@@ -509,6 +523,8 @@ export default function App() {
                     onExportPDF={handleExportPDF}
                     hiddenWidgetsCount={hiddenWidgets.length}
                     canGoBackToConfig={canGoBackToConfig}
+                    backgroundColor={dashboardBackgroundColor}
+                    setBackgroundColor={setDashboardBackgroundColor}
                 />;
     }
   };
