@@ -1,11 +1,12 @@
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { AppState, ColumnConfig, RowData, ParsedFile, SavedDashboard, AnyWidget, ChartWidgetConfig, KpiWidgetConfig, WidgetSize, TextWidgetConfig, TitleWidgetConfig, AIServiceConfig, AIInsightWidget, StructuredInsight, PivotWidgetConfig, RankWidgetConfig } from './types';
+import { AppState, ColumnConfig, RowData, ParsedFile, SavedDashboard, AnyWidget, ChartWidgetConfig, KpiWidgetConfig, WidgetSize, TextWidgetConfig, TitleWidgetConfig, AIServiceConfig, AIInsightWidget, StructuredInsight, PivotWidgetConfig, RankWidgetConfig, DashboardTemplate } from './types';
 import { Analytics } from "@vercel/analytics/react";
 
 // Page Components
 import UploadPage from './pages/UploadPage';
 import ConfigurePage from './pages/ConfigurePage';
+import TemplateSelectionPage from './pages/TemplateSelectionPage';
 import DashboardPage from './pages/DashboardPage';
 import LandingPage from './pages/LandingPage';
 
@@ -33,6 +34,7 @@ import { themes, ThemeName } from './themes';
 import { isPotentiallyNumeric } from './utils/dataCleaner';
 import { useAuth } from './contexts/AuthContext';
 import { evaluateFormula } from './utils/formulaEvaluator';
+import { hydrateTemplate } from './utils/templateHydrator';
 
 const SESSION_STORAGE_KEY = 'sheetsight_active_session';
 
@@ -255,11 +257,22 @@ export default function App() {
     setColumnConfig(finalConfig);
     setData(cleanedData);
     
-    if(appState !== 'DASHBOARD') {
-        setWidgets([{ id: `datatable-${Date.now()}`, type: 'datatable', size: 'full', title: fileName }]);
-    }
-    setAppState('DASHBOARD');
-  }, [parsedFile, selectedSheet, fileName, appState]);
+    // Instead of going directly to dashboard, go to template selection
+    setAppState('TEMPLATE_SELECTION');
+  }, [parsedFile, selectedSheet]);
+
+  const handleStartBlank = useCallback(() => {
+      setWidgets([{ id: `datatable-${Date.now()}`, type: 'datatable', size: 'full', title: fileName }]);
+      setAppState('DASHBOARD');
+  }, [fileName]);
+
+  const handleTemplateSelected = useCallback((template: DashboardTemplate, mapping: Record<string, string>) => {
+      const hydratedWidgets = hydrateTemplate(template, mapping, columnConfig);
+      // Add data table to the bottom of templates as standard practice
+      const widgetsWithTable = [...hydratedWidgets, { id: `datatable-${Date.now()}`, type: 'datatable' as const, size: 'full' as WidgetSize, title: fileName }];
+      setWidgets(widgetsWithTable);
+      setAppState('DASHBOARD');
+  }, [columnConfig, fileName]);
 
   const handleGetStarted = () => {
     handleReset();
@@ -533,6 +546,14 @@ export default function App() {
                   onConfirm={handleConfigConfirmed} 
                   onReset={handleReset} 
                 />;
+      case 'TEMPLATE_SELECTION':
+        return <TemplateSelectionPage 
+                  onTemplateSelected={handleTemplateSelected}
+                  onStartBlank={handleStartBlank}
+                  columnConfig={columnConfig}
+                  onBack={() => setAppState('CONFIGURE')}
+                  onBackToLanding={() => setShowLandingPage(true)}
+                />;
       case 'DASHBOARD':
         return <DashboardPage
                     fileName={fileName}
@@ -566,7 +587,7 @@ export default function App() {
     }
   };
 
-  const rootContainerClasses = appState === 'DASHBOARD' ? "" : "min-h-screen flex items-center justify-center p-4";
+  const rootContainerClasses = appState === 'DASHBOARD' || appState === 'TEMPLATE_SELECTION' ? "" : "min-h-screen flex items-center justify-center p-4";
 
   return (
     <div className={rootContainerClasses}>

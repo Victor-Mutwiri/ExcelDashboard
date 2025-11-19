@@ -1,5 +1,5 @@
 
-export type AppState = 'UPLOAD' | 'CONFIGURE' | 'DASHBOARD';
+export type AppState = 'UPLOAD' | 'CONFIGURE' | 'TEMPLATE_SELECTION' | 'DASHBOARD';
 
 export interface ColumnConfig {
   id: string;
@@ -158,6 +158,24 @@ export interface SavedDashboard {
   fileName: string;
   widgets: AnyWidget[];
   backgroundColor?: string;
+}
+
+// --- TEMPLATES ---
+export interface TemplateField {
+  key: string;       // The placeholder key used in widget configs (e.g., "revenue")
+  label: string;     // The user-facing label (e.g., "Revenue Column")
+  dataType: 'number' | 'string' | 'date';
+  optional?: boolean;
+}
+
+export interface DashboardTemplate {
+  id: string;
+  name: string;
+  description: string;
+  category: 'Sales' | 'Finance' | 'Marketing' | 'HR' | 'Operations' | 'Support' | 'E-commerce' | 'Project' | 'General';
+  iconName: string; // String reference to an icon component
+  requiredFields: TemplateField[];
+  widgets: AnyWidget[]; // Configs contain placeholders like "{{revenue}}"
 }
 
 // --- AI SETTINGS ---
