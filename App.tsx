@@ -1,7 +1,7 @@
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import { HashRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { AppState, ColumnConfig, RowData, ParsedFile, SavedDashboard, AnyWidget, ChartWidgetConfig, KpiWidgetConfig, WidgetSize, TextWidgetConfig, TitleWidgetConfig, AIServiceConfig, AIInsightWidget, StructuredInsight, PivotWidgetConfig, RankWidgetConfig, DashboardTemplate } from './types';
-import { Analytics } from "@vercel/analytics/react";
 
 // Page Components
 import UploadPage from './pages/UploadPage';
@@ -9,6 +9,7 @@ import ConfigurePage from './pages/ConfigurePage';
 import TemplateSelectionPage from './pages/TemplateSelectionPage';
 import DashboardPage from './pages/DashboardPage';
 import LandingPage from './pages/LandingPage';
+import SeoPage from './pages/SeoPage';
 
 // Modal Components
 import ChartModal from './components/ChartModal';
@@ -38,8 +39,14 @@ import { hydrateTemplate } from './utils/templateHydrator';
 
 const SESSION_STORAGE_KEY = 'sheetsight_active_session';
 
-export default function App() {
+// ---------------------------------------------------------------------------
+// MAIN TOOL COMPONENT
+// This component encapsulates all the logic for the Dashboard Builder
+// ---------------------------------------------------------------------------
+
+function SheetSightTool() {
   const { session, signOut } = useAuth();
+  const navigate = useNavigate();
 
   // Load saved session once on mount (lazy initialization)
   const [initialSession] = useState(() => {
@@ -53,7 +60,6 @@ export default function App() {
   });
 
   // Initialize states with saved values or defaults
-  const [showLandingPage, setShowLandingPage] = useState<boolean>(initialSession?.showLandingPage ?? true);
   const [appState, setAppState] = useState<AppState>(initialSession?.appState ?? 'UPLOAD');
   const [fileName, setFileName] = useState<string>(initialSession?.fileName ?? '');
   const [parsedFile, setParsedFile] = useState<ParsedFile | null>(initialSession?.parsedFile ?? null);
@@ -97,7 +103,7 @@ export default function App() {
   // Effect for Session Persistence
   useEffect(() => {
     const sessionData = {
-      showLandingPage,
+      showLandingPage: false, // Deprecated inside Router
       appState,
       fileName,
       parsedFile,
@@ -113,7 +119,19 @@ export default function App() {
     } catch (e) {
       console.warn('Failed to save session to local storage (possibly quota exceeded):', e);
     }
-  }, [showLandingPage, appState, fileName, parsedFile, selectedSheet, columnConfig, data, widgets, dashboardBackgroundColor]);
+  }, [appState, fileName, parsedFile, selectedSheet, columnConfig, data, widgets, dashboardBackgroundColor]);
+
+  // Effect for Google Analytics Page Tracking (Simulated for AppState)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      const pagePath = `/app/${appState.toLowerCase()}`;
+      (window as any).gtag('event', 'page_view', {
+        page_title: `SheetSight | ${appState.charAt(0) + appState.slice(1).toLowerCase()}`,
+        page_path: pagePath,
+        page_location: window.location.origin + pagePath
+      });
+    }
+  }, [appState]);
 
   // Effect for Print Preview
   useEffect(() => {
@@ -170,34 +188,20 @@ export default function App() {
     setWidgets([]);
     setDashboardBackgroundColor('');
     setIsPreviewMode(false);
-    setShowLandingPage(false); 
   }, []);
 
   const handleDeleteAccount = async () => {
-    // 1. Trigger visual effect
     setIsAccountDeleting(true);
-    setIsSettingsModalOpen(false); // Close modal immediately to show effect
-
-    // 2. Wait for dramatic effect (1.5s)
+    setIsSettingsModalOpen(false); 
     await new Promise(resolve => setTimeout(resolve, 1500));
-
-    // 3. Perform cleanup
     try {
-        // Clear local app data
         localStorage.removeItem(SESSION_STORAGE_KEY);
         localStorage.removeItem('dashboards');
         localStorage.removeItem('ai_settings');
         localStorage.removeItem('dashboard-theme');
-        
-        // Sign out from Supabase (effectively "deleting" access for this session context)
         await signOut();
-        
-        // Reset internal state
         handleReset();
-        
-        // Go back to landing page
-        setShowLandingPage(true);
-        
+        navigate('/'); // Go to landing page
     } catch (error) {
         console.error("Error during account deletion process:", error);
     } finally {
@@ -217,7 +221,7 @@ export default function App() {
       isNumeric: sheetData.slice(1).every(row => row[i] === null || row[i] === '' || isPotentiallyNumeric(row[i])),
     }));
     setColumnConfig(initialConfig);
-    setData([]); // Reset data so ConfigurePage reprocesses or user cleans it
+    setData([]); 
   }, [parsedFile]);
 
   // --- DATA HANDLING & STATE TRANSITIONS ---
@@ -256,8 +260,6 @@ export default function App() {
     if (!parsedFile || !selectedSheet) return;
     setColumnConfig(finalConfig);
     setData(cleanedData);
-    
-    // Instead of going directly to dashboard, go to template selection
     setAppState('TEMPLATE_SELECTION');
   }, [parsedFile, selectedSheet]);
 
@@ -268,16 +270,10 @@ export default function App() {
 
   const handleTemplateSelected = useCallback((template: DashboardTemplate, mapping: Record<string, string>) => {
       const hydratedWidgets = hydrateTemplate(template, mapping, columnConfig);
-      // Add data table to the bottom of templates as standard practice
       const widgetsWithTable = [...hydratedWidgets, { id: `datatable-${Date.now()}`, type: 'datatable' as const, size: 'full' as WidgetSize, title: fileName }];
       setWidgets(widgetsWithTable);
       setAppState('DASHBOARD');
   }, [columnConfig, fileName]);
-
-  const handleGetStarted = () => {
-    handleReset();
-    setShowLandingPage(false);
-  };
 
   // --- WIDGET & DASHBOARD MANAGEMENT ---
   const handleAddCalculatedColumn = useCallback((name: string, formula: string) => {
@@ -334,7 +330,7 @@ export default function App() {
     setData(dashboard.data);
     setWidgets(dashboard.widgets);
     setDashboardBackgroundColor(dashboard.backgroundColor || '');
-    setParsedFile({ sheets: { 'Loaded Sheet': [] }, isExcel: false }); // Mock parsedFile to disable re-config
+    setParsedFile({ sheets: { 'Loaded Sheet': [] }, isExcel: false }); 
     setSelectedSheet('Loaded Sheet');
     setAppState('DASHBOARD');
     setIsLoadModalOpen(false);
@@ -521,16 +517,6 @@ export default function App() {
     return '';
   };
 
-  // --- RENDER LOGIC ---
-  if (showLandingPage) {
-    return (
-      <>
-        <LandingPage onGetStarted={handleGetStarted} />
-        <Analytics />
-      </>
-    );
-  }
-
   const renderContent = () => {
     switch (appState) {
       case 'UPLOAD':
@@ -538,7 +524,7 @@ export default function App() {
                   onFileUpload={handleFileUploaded} 
                   onDataPaste={handleDataPasted} 
                   onOpenLoadModal={() => withAuth(() => setIsLoadModalOpen(true))} 
-                  onBackToLanding={() => setShowLandingPage(true)}
+                  onBackToLanding={() => navigate('/')}
                />;
       case 'CONFIGURE':
         if (!parsedFile) return null;
@@ -558,7 +544,7 @@ export default function App() {
                   onStartBlank={handleStartBlank}
                   columnConfig={columnConfig}
                   onBack={() => setAppState('CONFIGURE')}
-                  onBackToLanding={() => setShowLandingPage(true)}
+                  onBackToLanding={() => navigate('/')}
                 />;
       case 'DASHBOARD':
         return <DashboardPage
@@ -581,7 +567,7 @@ export default function App() {
                     onLoad={() => withAuth(() => setIsLoadModalOpen(true))}
                     onSave={() => withAuth(() => setIsSaveModalOpen(true))}
                     onBackToConfig={() => setAppState('CONFIGURE')}
-                    onShowLandingPage={() => setShowLandingPage(true)}
+                    onShowLandingPage={() => navigate('/')}
                     onManageHidden={() => setIsManageHiddenOpen(true)}
                     onSettings={() => withAuth(() => setIsSettingsModalOpen(true))}
                     onExportPDF={handleExportPDF}
@@ -627,8 +613,28 @@ export default function App() {
         <ManageHiddenWidgetsModal isOpen={isManageHiddenOpen} onClose={() => setIsManageHiddenOpen(false)} hiddenWidgets={hiddenWidgets} onToggleVisibility={handleToggleWidgetVisibility} />
         <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onSuccess={handleAuthSuccess} />
         {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
-        <Analytics />
       </div>
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// ROUTER CONFIGURATION
+// ---------------------------------------------------------------------------
+
+export default function App() {
+  return (
+    <HashRouter>
+        <Routes>
+            <Route path="/" element={<LandingPage onGetStarted={() => {}} />} />
+            <Route path="/app/*" element={<SheetSightTool />} />
+            <Route path="/dashboard-generator" element={<SeoPage type="generator" />} />
+            <Route path="/excel-to-dashboard" element={<SeoPage type="excel-to-dashboard" />} />
+            <Route path="/csv-dashboard-tool" element={<SeoPage type="csv-tool" />} />
+            <Route path="/faq" element={<SeoPage type="faq" />} />
+            <Route path="/features" element={<SeoPage type="features" />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+    </HashRouter>
   );
 }

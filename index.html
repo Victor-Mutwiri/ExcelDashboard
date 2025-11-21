@@ -6,25 +6,36 @@
   <link rel="icon" type="image/png" href="https://ik.imagekit.io/janjez/ExcelDash/Favicon%20(2).png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
+  <!-- Google tag (gtag.js) -->
+  <!-- TODO: Replace G-XXXXXXXXXX with your actual Google Analytics Measurement ID from analytics.google.com -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-XXXXXXXXXX');
+  </script>
+
   <!-- SEO Meta Tags -->
-  <title>SheetSight | Instant Spreadsheet to Interactive Dashboards</title>
-  <meta name="description" content="Turn your spreadsheets into beautiful, interactive dashboards in seconds. Upload an Excel or CSV file, or paste data, to instantly generate charts, tables, and insights. No code required." />
-  <meta name="keywords" content="excel dashboard, csv dashboard, data visualization, interactive charts, business intelligence, spreadsheet to dashboard, no code data analysis, data dashboard, dashboard generator" />
+  <title>SheetSight | No-Code Excel Dashboard Generator & BI Tool</title>
+  <meta name="description" content="Turn Excel into dashboards instantly with SheetSight. The best no-code dashboard tool and automated dashboard generator for CSV and spreadsheets. Perfect BI tool for small business." />
+  <meta name="keywords" content="dashboard generator, no-code dashboard tool, excel dashboard generator, spreadsheet to dashboard tool, turn excel into dashboard, csv to dashboard, automated dashboard tool, bi tool for small business, google sheets dashboard generator" />
   <meta name="robots" content="index, follow" />
-  <link rel="canonical" href="https://datadash.app" />
+  <link rel="canonical" href="https://sheetsight.xyz" />
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://datadash.app" />
-  <meta property="og:title" content="SheetSight | Instant Spreadsheet to Interactive Dashboards" />
-  <meta property="og:description" content="Turn your spreadsheets into beautiful, interactive dashboards in seconds. Upload an Excel or CSV file to instantly generate charts, tables, and insights." />
+  <meta property="og:url" content="https://sheetsight.xyz" />
+  <meta property="og:title" content="SheetSight | No-Code Excel Dashboard Generator" />
+  <meta property="og:description" content="Turn Excel and CSV files into interactive dashboards instantly. The automated dashboard tool for small businesses." />
   <meta property="og:image" content="https://ik.imagekit.io/janjez/Sheetsight%20logo.png" />
 
   <!-- Twitter -->
   <meta property="twitter:card" content="summary_large_image" />
-  <meta property="twitter:url" content="https://datadash.app" />
-  <meta property="twitter:title" content="SheetSight | Instant Spreadsheet to Interactive Dashboards" />
-  <meta property="twitter:description" content="Turn your spreadsheets into beautiful, interactive dashboards in seconds. Upload an Excel or CSV file to instantly generate charts, tables, and insights." />
+  <meta property="twitter:url" content="https://sheetsight.xyz" />
+  <meta property="twitter:title" content="SheetSight | No-Code Excel Dashboard Generator" />
+  <meta property="twitter:description" content="Turn Excel and CSV files into interactive dashboards instantly. The automated dashboard tool for small businesses." />
   <meta property="twitter:image" content="https://ik.imagekit.io/janjez/Sheetsight%20logo.png" />
   
   <script src="https://cdn.tailwindcss.com"></script>
@@ -38,9 +49,10 @@
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": "SheetSight",
+    "url": "https://sheetsight.xyz",
     "applicationCategory": "BusinessApplication",
     "operatingSystem": "Web",
-    "description": "An interactive dashboard generator that allows users to upload Excel or CSV files to instantly turn their spreadsheets into beautiful, interactive dashboards with charts, sorting, and filtering capabilities.",
+    "description": "An automated dashboard tool and excel dashboard generator that allows users to upload Excel or CSV files to instantly turn their spreadsheets into beautiful, interactive dashboards. The ideal BI tool for small business.",
     "aggregateRating": {
       "@type": "AggregateRating",
       "ratingValue": "4.9",
@@ -89,13 +101,14 @@
     "react/": "https://aistudiocdn.com/react@18.2.0/",
     "react-dom": "https://aistudiocdn.com/react-dom@18.2.0",
     "react-dom/": "https://aistudiocdn.com/react-dom@18.2.0/",
+    "react-router-dom": "https://aistudiocdn.com/react-router-dom@6.22.3?external=react,react-dom,react-router,@remix-run/router",
+    "react-router": "https://aistudiocdn.com/react-router@6.22.3?external=react,react-dom,@remix-run/router",
+    "@remix-run/router": "https://aistudiocdn.com/@remix-run/router@1.15.3",
     "recharts": "https://aistudiocdn.com/recharts@2.12.7?external=react,react-dom",
     "xlsx": "https://aistudiocdn.com/xlsx@0.18.5",
     "@tanstack/react-table": "https://aistudiocdn.com/@tanstack/react-table@8.21.3?external=react,react-dom",
     "@google/genai": "https://aistudiocdn.com/@google/genai@1.29.1",
     "@supabase/supabase-js": "https://aistudiocdn.com/@supabase/supabase-js@2.44.4",
-    "@vercel/analytics/react": "https://aistudiocdn.com/@vercel/analytics@1.5.0/react?external=react,react-dom",
-    "@vercel/analytics/": "https://aistudiocdn.com/@vercel/analytics@1.5.0/",
     "canvas-confetti": "https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/+esm"
   }
 }
@@ -500,6 +513,49 @@
 </head>
 <body class="transition-colors duration-300">
   <div id="root"></div>
+  
+  <!-- SEO Static Content for Crawlers -->
+  <div id="seo-content" style="display:none;">
+    <h1>SheetSight: The Ultimate No-Code Excel Dashboard Generator</h1>
+    <p>
+      SheetSight is the premier <strong>dashboard generator</strong> designed to help you <strong>turn Excel into dashboard</strong> visuals instantly. 
+      As a powerful <strong>automated dashboard tool</strong>, we transform your raw data into actionable insights. 
+      Whether you are looking for a <strong>CSV to dashboard</strong> converter or a comprehensive <strong>spreadsheet to dashboard tool</strong>, 
+      SheetSight simplifies data analysis. It is the perfect <strong>BI tool for small business</strong> users who need professional results without coding.
+    </p>
+
+    <h2>Automated BI Tool for Small Business</h2>
+    <p>
+      SheetSight is designed as an accessible <strong>BI tool for small business</strong> owners and data analysts. 
+      As an <strong>automated dashboard tool</strong>, it interprets your data structure to suggest the best charts, KPIs, and pivot tables automatically. 
+      Stop wasting time on manual formatting and start using the most efficient <strong>spreadsheet to dashboard tool</strong> available.
+    </p>
+
+    <h2>Core Features</h2>
+    <ul>
+      <li><strong>No-code dashboard tool</strong>: Create stunning reports without writing a single line of code.</li>
+      <li><strong>Excel dashboard generator</strong>: Drag and drop support for .xlsx and .xls files.</li>
+      <li><strong>Google Sheets dashboard generator</strong>: Seamlessly work with your spreadsheet exports.</li>
+      <li><strong>CSV to dashboard</strong>: Fast processing for large CSV data files.</li>
+      <li><strong>Automated dashboard tool</strong>: AI-driven insights and automated chart creation.</li>
+    </ul>
+
+    <h2>Why Use SheetSight?</h2>
+    <p>
+      Stop struggling with complex spreadsheet formulas. SheetSight acts as your personal data analyst, offering advanced features like pivot tables, 
+      ranking leaderboards, and AI-powered data insights. Optimize your workflow with the best <strong>spreadsheet to dashboard tool</strong> on the market.
+    </p>
+
+    <h2>Explore Our Tools</h2>
+    <ul>
+        <li><a href="/dashboard-generator">Free Excel Dashboard Generator</a></li>
+        <li><a href="/excel-to-dashboard">Convert Excel to Dashboard</a></li>
+        <li><a href="/csv-dashboard-tool">CSV Dashboard Tool</a></li>
+        <li><a href="/features">Features & Data Visualization</a></li>
+        <li><a href="/faq">Dashboard Software FAQ</a></li>
+    </ul>
+  </div>
+
   <script type="module" src="/index.tsx"></script>
 </body>
 </html>
